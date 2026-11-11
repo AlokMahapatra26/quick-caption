@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoCaption Studio • In-Browser WASM Captions</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-badge">⚡</span>
+        <span class="brand-title">AUTOCAPTION <span class="brand-sub">STUDIO</span></span>
+      </div>
+
+      <div class="topbar-center">
+        <div id="status-pill" class="status-pill status-ready">
+          <span class="status-dot"></span>
+          <span id="status-text">Ready • Drop a Video</span>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button id="btn-upload-trigger" class="btn btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          New Video
+        </button>
+        <button id="btn-export" class="btn btn-primary" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export MP4
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+      <!-- Left / Center: Video Stage & Controls -->
+      <main class="stage-container">
+        <!-- Canvas & Hidden Video Viewport -->
+        <div class="viewport-wrapper">
+          <div id="dropzone" class="dropzone">
+            <div class="dropzone-box">
+              <div class="dropzone-icon">📹</div>
+              <h3>Drag & Drop your video here</h3>
+              <p>Supports MP4, MOV, WebM • 100% Client-Side ($0 Server Cost)</p>
+              <div class="dropzone-divider"><span>OR</span></div>
+              <button id="btn-browse" class="btn btn-outline">Browse Video File</button>
+              <button id="btn-demo-video" class="btn btn-ghost">Use Demo Video & Sample Captions</button>
+              <input type="file" id="file-input" accept="video/mp4,video/webm,video/quicktime" hidden>
+            </div>
+          </div>
+
+          <div id="player-container" class="player-container hidden">
+            <canvas id="preview-canvas"></canvas>
+            <video id="source-video" playsinline preload="auto" class="hidden-source-video"></video>
+            
+            <!-- Quick Overlay Indicators -->
+            <div id="canvas-loader" class="canvas-loader hidden">
+              <div class="spinner"></div>
+              <span id="canvas-loader-text">Transcribing with Whisper AI...</span>
+              <div class="progress-bar-container">
+                <div id="ai-progress-bar" class="progress-bar-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scrubber & Playback Controls Bar -->
+        <div id="playback-bar" class="playback-bar hidden">
+          <button id="btn-play-pause" class="btn-icon" title="Play/Pause (Space)">
+            <svg id="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg id="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="hidden"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </button>
+
+          <span id="time-display" class="time-display">00:00 / 00:00</span>
+
+          <div class="scrubber-wrapper">
+            <input type="range" id="timeline-scrubber" min="0" max="100" value="0" step="0.05">
+          </div>
+
+          <button id="btn-mute" class="btn-icon" title="Mute/Unmute">
+            <svg id="icon-vol-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <svg id="icon-vol-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+          </button>
+        </div>
+      </main>
+
+      <!-- Right Sidebar: Customizer & Transcript Editor -->
+      <aside class="sidebar">
+        <!-- Sidebar Navigation Tabs -->
+        <div class="sidebar-tabs">
+          <button class="tab-btn active" data-tab="tab-styles">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+            Styles & Presets
+          </button>
+          <button class="tab-btn" data-tab="tab-transcript">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Transcript (<span id="transcript-count">0</span>)
+          </button>
+        </div>
+
+        <!-- Tab 1: Styles & Presets -->
+        <div id="tab-styles" class="tab-pane active">
+          <!-- Preset Selector -->
+          <div class="panel-section">
+            <label class="section-title">CREATOR PRESETS</label>
+            <div class="presets-grid">
+              <div class="preset-card active" data-preset="hormozi">
+                <div class="preset-badge">HORMOZI</div>
+                <div class="preset-sample font-montserrat" style="color:#00FF66;">VIRAL GROW</div>
+                <span class="preset-desc">Lime pop, black stroke, all-caps</span>
+              </div>
+
+              <div class="preset-card" data-preset="editorial">
+                <div class="preset-badge">VOX / HIGHLIGHT</div>
+                <div class="preset-sample font-playfair" style="background:#FF0066; color:#FFF; padding:1px 6px; border-radius:3px; display:inline-block; font-size:0.8rem; font-style:italic;">charge, which</div>
+                <span class="preset-desc">Hot pink marker tape, serif font</span>
+              </div>
+
+              <div class="preset-card" data-preset="mrbeast">
+                <div class="preset-badge">BEAST</div>
+                <div class="preset-sample font-bangers" style="color:#FFE600;">$1,000,000</div>
+                <span class="preset-desc">Comic punch, yellow glow, tilted</span>
+              </div>
+
+              <div class="preset-card" data-preset="minimal">
+                <div class="preset-badge">MINIMAL</div>
+                <div class="preset-sample font-inter" style="color:#FFFFFF;">Clean modern</div>
+                <span class="preset-desc">Elegant box, crisp white font</span>
+              </div>
+
+              <div class="preset-card" data-preset="terminal">
+                <div class="preset-badge">TERMINAL</div>
+                <div class="preset-sample font-mono" style="color:#00FFAA;">&gt; DEV_MODE</div>
+                <span class="preset-desc">Monospace, cyber scanline vibe</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fine-Tuning Controls -->
+          <div class="panel-section">
+            <label class="section-title">TYPOGRAPHY & POSITION</label>
+            
+            <div class="control-row">
+              <span class="control-label">Font Family</span>
+              <select id="ctrl-font-family" class="control-select">
+                <option value="Playfair Display">Playfair Display (Serif)</option>
+                <option value="Montserrat">Montserrat Black</option>
+                <option value="Bangers">Bangers (Comic)</option>
+                <option value="Inter">Inter Bold</option>
+                <option value="JetBrains Mono">JetBrains Mono</option>
+              </select>
+            </div>
+
+            <div class="control-row">
+              <span class="control-label">Font Size</span>
+              <div class="slider-group">
+                <input type="range" id="ctrl-font-size" min="24" max="72" value="44">
+                <span id="val-font-size" class="slider-val">44px</span>
+              </div>
+            </div>
+
+            <div class="control-row">
+              <span class="control-label">Vertical Position</span>
+              <div class="slider-group">
+                <input type="range" id="ctrl-pos-y" min="20" max="90" value="72">
+                <span id="val-pos-y" class="slider-val">72%</span>
+              </div>
+            </div>
+
+            <div class="control-row">
+              <span class="control-label">Outline Border</span>
+              <div class="slider-group">
+                <input type="range" id="ctrl-stroke-width" min="0" max="18" value="10">
+                <span id="val-stroke-width" class="slider-val">10px</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colors & Animation -->
+          <div class="panel-section">
+            <label class="section-title">COLORS & ANIMATION</label>
+            
+            <div class="color-picker-grid">
+              <div class="color-item">
+                <span>Active Word</span>
+                <input type="color" id="ctrl-active-color" value="#00FF66">
+              </div>
+              <div class="color-item">
+                <span>Default Text</span>
+                <input type="color" id="ctrl-text-color" value="#FFFFFF">
+              </div>
+              <div class="color-item">
+                <span>Stroke Border</span>
+                <input type="color" id="ctrl-stroke-color" value="#000000">
+              </div>
+              <div class="color-item">
+                <span>Marker Tape</span>
+                <input type="color" id="ctrl-tape-color" value="#FF0066">
+              </div>
+            </div>
+
+            <div class="control-row mt-3">
+              <span class="control-label">Word Animation</span>
+              <select id="ctrl-animation" class="control-select">
+                <option value="bounce">Bouncy Pop (Scale 1.15x)</option>
+                <option value="glow">Neon Glow</option>
+                <option value="none">Flat (Color Change Only)</option>
+              </select>
+            </div>
+
+            <div class="control-row mt-2">
+              <span class="control-label">All-Caps Text</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="ctrl-uppercase" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="control-row mt-2">
+              <span class="control-label">Auto Emojis (🔥, 🚀, 💸)</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="ctrl-emojis" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Transcript Editor -->
+        <div id="tab-transcript" class="tab-pane">
+          <div class="transcript-header-actions">
+            <button id="btn-run-whisper" class="btn btn-primary btn-full">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+              Transcribe with Whisper AI
+            </button>
+            <button id="btn-load-sample-transcript" class="btn btn-outline btn-full mt-2">
+              Load Sample Captions
+            </button>
+          </div>
+
+          <div id="transcript-list" class="transcript-list">
+            <div class="empty-transcript">
+              <p>No captions loaded yet.</p>
+              <span>Click "Transcribe with Whisper AI" or load sample captions to edit words.</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Client-Side Video Export</h3>
+          <button id="btn-close-modal" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p id="export-status-desc">Rendering video frames and burning subtitles locally in your browser...</p>
+          <div class="export-progress-bar">
+            <div id="export-progress-fill" class="export-progress-fill" style="width: 0%;"></div>
+          </div>
+          <span id="export-percent" class="export-percent">0%</span>
+          <div id="export-download-area" class="export-download-area hidden">
+            <a id="btn-download-video" class="btn btn-primary btn-full" download="captioned-video.mp4">
+              Download Captioned MP4 🎬
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
