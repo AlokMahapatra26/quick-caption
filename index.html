@@ -92,6 +92,31 @@
 
       <!-- Right Sidebar: Customizer & Transcript Editor -->
       <aside class="sidebar">
+        <!-- Smart Jumpcut Card -->
+        <div class="smart-jumpcut-box">
+          <div class="jumpcut-header">
+            <div class="jumpcut-title">
+              <span class="jumpcut-icon">⚡</span>
+              <div>
+                <div class="jumpcut-heading">Auto-Cut Silences</div>
+                <div id="jumpcut-stats" class="jumpcut-stats">Ready • Skips dead air</div>
+              </div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-silence-remover" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="jumpcut-controls">
+            <span class="control-label">Trim pauses &gt;</span>
+            <select id="select-silence-threshold" class="control-select">
+              <option value="0.3">0.3s (Aggressive / High Energy)</option>
+              <option value="0.4" selected>0.4s (Optimal / TikTok Pacing)</option>
+              <option value="0.6">0.6s (Gentle / Podcast Pacing)</option>
+            </select>
+          </div>
+        </div>
+
         <!-- Sidebar Navigation Tabs -->
         <div class="sidebar-tabs">
           <button class="tab-btn active" data-tab="tab-styles">

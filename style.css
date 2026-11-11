@@ -423,6 +423,61 @@ input[type="range"]::-webkit-slider-thumb:hover {
   flex-direction: column;
 }
 
+/* SMART JUMPCUT CARD */
+.smart-jumpcut-box {
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #181822 0%, #121218 100%);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.jumpcut-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.jumpcut-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jumpcut-icon {
+  background: rgba(0, 255, 102, 0.15);
+  color: var(--accent-green);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.jumpcut-heading {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.jumpcut-stats {
+  font-size: 0.68rem;
+  color: var(--accent-green);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.jumpcut-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding-top: 2px;
+}
+
 .sidebar-tabs {
   display: flex;
   height: 48px;

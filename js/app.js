@@ -8,6 +8,7 @@ import { SubtitleEngine, PRESETS } from './subtitleEngine.js';
 import { extract16kHzMonoAudio } from './audioExtractor.js';
 import { VideoExporter } from './exporter.js';
 import { DEMO_SAMPLE_WORDS } from './transcriber.worker.js';
+import { SilenceDetector } from './silenceDetector.js';
 
 class AutoCaptionApp {
   constructor() {
@@ -16,7 +17,8 @@ class AutoCaptionApp {
     this.ctx = this.canvas.getContext('2d');
     
     this.engine = new SubtitleEngine();
-    this.exporter = new VideoExporter(this.canvas, this.video, this.engine);
+    this.silenceDetector = new SilenceDetector(0.4);
+    this.exporter = new VideoExporter(this.canvas, this.video, this.engine, this.silenceDetector);
     
     this.currentFile = null;
     this.isPlaying = false;
@@ -53,6 +55,11 @@ class AutoCaptionApp {
     this.presetCards = document.querySelectorAll('.preset-card');
     this.transcriptList = document.getElementById('transcript-list');
     this.transcriptCount = document.getElementById('transcript-count');
+
+    // Smart Silence Remover Controls
+    this.toggleSilenceRemover = document.getElementById('toggle-silence-remover');
+    this.selectSilenceThreshold = document.getElementById('select-silence-threshold');
+    this.jumpcutStats = document.getElementById('jumpcut-stats');
 
     // Style Controls
     this.ctrlFontFamily = document.getElementById('ctrl-font-family');
@@ -157,6 +164,17 @@ class AutoCaptionApp {
         card.classList.add('active');
         this.applyPreset(card.dataset.preset);
       });
+    });
+
+    // Smart Silence Remover Events
+    this.toggleSilenceRemover?.addEventListener('change', (e) => {
+      this.silenceDetector.isEnabled = e.target.checked;
+      this.recalculateSilences();
+    });
+
+    this.selectSilenceThreshold?.addEventListener('change', (e) => {
+      this.silenceDetector.setThreshold(Number(e.target.value));
+      this.recalculateSilences();
     });
 
     // Style Adjustments
@@ -320,6 +338,14 @@ class AutoCaptionApp {
 
   startRenderLoop() {
     const loop = () => {
+      // Smart Silence Remover: Instantly jump-cut dead air pauses
+      if (this.isPlaying && !this.video.paused && this.silenceDetector.isEnabled) {
+        const jumpTarget = this.silenceDetector.getJumpTarget(this.video.currentTime);
+        if (jumpTarget !== null && jumpTarget > this.video.currentTime + 0.05) {
+          this.video.currentTime = jumpTarget;
+        }
+      }
+
       this.engine.render(
         this.ctx,
         this.canvas.width,
@@ -331,6 +357,24 @@ class AutoCaptionApp {
     };
     if (this.rafId) cancelAnimationFrame(this.rafId);
     this.rafId = requestAnimationFrame(loop);
+  }
+
+  recalculateSilences() {
+    if (!this.silenceDetector.isEnabled) {
+      if (this.jumpcutStats) this.jumpcutStats.textContent = 'Off • Dead air preserved';
+      return;
+    }
+
+    const dur = this.video.duration || 10;
+    const result = this.silenceDetector.detectFromWords(this.engine.rawWords, dur);
+
+    if (this.jumpcutStats) {
+      if (result.count === 0) {
+        this.jumpcutStats.textContent = '0 long pauses found';
+      } else {
+        this.jumpcutStats.textContent = `⚡ Cut ${result.count} pauses • Saved ${result.timeSaved}s`;
+      }
+    }
   }
 
   formatTime(secs) {
@@ -415,6 +459,7 @@ class AutoCaptionApp {
       this.setStatus('ready', 'Transcription Complete');
       this.engine.processWords(data.words);
       this.renderTranscriptList();
+      this.recalculateSilences();
     }
   }
 
@@ -423,6 +468,7 @@ class AutoCaptionApp {
     this.setStatus('ready', 'Sample Captions Loaded');
     this.engine.processWords(DEMO_SAMPLE_WORDS);
     this.renderTranscriptList();
+    this.recalculateSilences();
   }
 
   renderTranscriptList() {

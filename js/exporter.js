@@ -5,10 +5,11 @@
  */
 
 export class VideoExporter {
-  constructor(canvas, videoElement, subtitleEngine) {
+  constructor(canvas, videoElement, subtitleEngine, silenceDetector = null) {
     this.canvas = canvas;
     this.video = videoElement;
     this.subtitleEngine = subtitleEngine;
+    this.silenceDetector = silenceDetector;
     this.isExporting = false;
   }
 
@@ -73,6 +74,14 @@ export class VideoExporter {
 
       // Render loop during recording
       const interval = setInterval(() => {
+        // Auto-skip silences during export if enabled
+        if (this.silenceDetector && this.silenceDetector.isEnabled) {
+          const jumpTarget = this.silenceDetector.getJumpTarget(this.video.currentTime);
+          if (jumpTarget !== null && jumpTarget > this.video.currentTime + 0.05) {
+            this.video.currentTime = jumpTarget;
+          }
+        }
+
         const percent = Math.min(99, Math.round((this.video.currentTime / duration) * 100));
         onProgress(percent);
 
@@ -81,7 +90,7 @@ export class VideoExporter {
           this.video.pause();
           recorder.stop();
         }
-      }, 100);
+      }, 50);
 
       const result = await exportPromise;
       onProgress(100);
