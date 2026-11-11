@@ -1138,3 +1138,182 @@ input:checked + .toggle-slider:before {
 .hidden {
   display: none !important;
 }
+
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVE STYLES
+   ========================================================================== */
+
+@media (max-width: 860px) {
+  /* Allow natural scrolling on mobile */
+  body {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .app-layout {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  /* Stack Stage and Controls Vertically */
+  .workspace {
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Stage (Top Section) */
+  .stage-container {
+    width: 100%;
+    min-height: auto;
+    padding: 20px 14px 16px;
+    overflow: visible;
+  }
+
+  .viewport-wrapper {
+    width: 100%;
+    height: 420px;
+    max-height: 52vh;
+  }
+
+  .player-container {
+    max-height: 100%;
+    aspect-ratio: 9 / 16;
+  }
+
+  .dropzone-frame {
+    max-width: 100%;
+    padding: 24px 16px;
+  }
+
+  .dropzone-title {
+    font-size: 1.2rem;
+  }
+
+  .dropzone-subtitle {
+    font-size: 12.5px;
+    max-width: 320px;
+  }
+
+  .dropzone-actions {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* Playback Bar */
+  .playback-bar {
+    max-width: 100%;
+    height: 44px;
+    padding: 0 10px;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .time-display {
+    font-size: 10.5px;
+    min-width: 78px;
+  }
+
+  /* Controls Sidebar (Bottom Section) */
+  .sidebar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--hairline);
+    height: auto;
+    overflow: visible;
+  }
+
+  .sidebar-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--canvas);
+    height: 46px;
+  }
+
+  .tab-btn {
+    font-size: 13px;
+    padding: 0 12px;
+  }
+
+  .tab-pane {
+    padding: 16px 14px 48px;
+    overflow-y: visible;
+  }
+
+  /* Modals */
+  .modal-card {
+    width: calc(100vw - 28px);
+    max-width: 440px;
+    margin: 14px;
+    padding: 20px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Ultra-Compact Phone Header */
+  .topbar {
+    padding: 0 10px;
+    height: 48px;
+  }
+
+  .brand {
+    gap: 6px;
+  }
+
+  .brand-logo {
+    width: 20px;
+    height: 20px;
+  }
+
+  .brand-name {
+    font-size: 0.88rem;
+  }
+
+  .topbar-actions {
+    gap: 4px;
+  }
+
+  .btn {
+    padding: 0 8px;
+    height: 30px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .viewport-wrapper {
+    height: 360px;
+    max-height: 48vh;
+  }
+
+  .presets-grid {
+    gap: 6px;
+  }
+
+  .preset-card {
+    padding: 6px 8px;
+    min-height: 48px;
+  }
+
+  .preset-sample {
+    font-size: 12px;
+  }
+
+  .color-chips-grid,
+  .toggles-grid {
+    gap: 6px;
+  }
+
+  .color-chip,
+  .toggle-card {
+    padding: 6px 8px;
+  }
+
+  .color-chip-label,
+  .toggle-text {
+    font-size: 10.5px;
+  }
+}

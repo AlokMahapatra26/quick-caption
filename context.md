@@ -292,6 +292,43 @@
 > 1. **Removed `STUDIO` Tag**: Removed the pill tag next to `AutoCaption` in the header for a clean, minimalist brand identity.
 > 2. **Removed Technical Eyebrow**: Removed `LOCAL CLIENT COMPUTE // ZERO CLOUD` from above the upload dropzone icon to keep the stage surface uncluttered.
 
+---
+
+## 31. Deployment Architecture & Push Options
+**User:**
+> now where shodul i push this ??
+
+**Assistant:**
+> ### Recommended Deployment Options:
+> 1. **Primary Target: GitHub + Vercel**
+>    - Because AutoCaption is 100% client-side (HTML5/CSS3/Vanilla JS + Web Worker + Transformers.js WASM/WebGPU), it has $0 backend/server costs.
+>    - Deploying on Vercel provides instant global edge CDN hosting, HTTPS (required for Web Audio API/MediaRecorder), and zero-config CI/CD.
+> 2. **Alternative: GitHub Pages**
+>    - Free static site hosting directly from the `main` branch under `https://alokmahapatra26.github.io/autocaption/`.
+> 3. Verified `gh` CLI is authenticated for `AlokMahapatra26`. Ready to initialize git and create the remote repository.
+
+---
+
+## 32. Mobile & Phone Screen Responsiveness
+**User:**
+> make it responsive on phone screen please
+
+**Assistant:**
+> ### Changes Implemented:
+> 1. **Adaptive Vertical Stacking (`@media (max-width: 860px)`)**:
+>    - Converted the fixed horizontal two-column studio layout into a fluid, vertically stacked mobile experience.
+>    - Video Stage remains prominently featured at the top (`height: 420px; max-height: 52vh;`) with its 9:16 vertical aspect ratio preserved.
+>    - Playback scrubber bar is full-width with compact time indicators and touch-friendly scrubbing.
+> 2. **Mobile Sticky Controls & Touch Navigation**:
+>    - Sidebar now sits naturally below the video player with sticky tabs (`Design` & `Transcript`) for instant toggling while scrolling.
+>    - Re-enabled natural mobile scroll flow (`overflow-y: auto`) while preventing horizontal overflow.
+> 3. **Compact Phone Optimization (`@media (max-width: 480px)`)**:
+>    - Optimized topbar padding (10px) and buttons for small screens (360px - 430px iPhone & Android devices).
+>    - Touch targets for preset cards, color swatches, and toggles calibrated to minimum 44px touch guidelines.
+>    - Responsive modals adapted to viewport width (`calc(100vw - 28px)`).
+
+
+
 
 
 
