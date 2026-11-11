@@ -3,32 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AutoCaption Studio • In-Browser WASM Captions</title>
+  <title>AutoCaption Studio • 100% Client-Side Video Subtitles</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Bangers&family=Inter:wght@400;600;800;900&family=Montserrat:wght@800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="app-layout">
-    <!-- Top Header -->
+    <!-- Topbar -->
     <header class="topbar">
       <div class="brand">
-        <span class="brand-badge">⚡</span>
-        <span class="brand-title">AUTOCAPTION <span class="brand-sub">STUDIO</span></span>
-      </div>
-
-      <div class="topbar-center">
-        <div id="status-pill" class="status-pill status-ready">
-          <span class="status-dot"></span>
-          <span id="status-text">Ready • Drop a Video</span>
-        </div>
+        <!-- AutoCaption Iconic Vector Mark -->
+        <svg class="brand-logo" width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect width="24" height="24" rx="6" fill="#09090b"/>
+          <rect x="4.5" y="6.5" width="15" height="11" rx="2" stroke="#ffffff" stroke-width="1.6"/>
+          <path d="M7.5 12.5h3.5M13 12.5h3.5" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <span class="brand-name">AutoCaption</span>
       </div>
 
       <div class="topbar-actions">
         <button id="btn-upload-trigger" class="btn btn-secondary">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           New Video
+        </button>
+        <button id="btn-settings" class="btn btn-secondary btn-icon-only" title="Settings">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
         <button id="btn-export" class="btn btn-primary" disabled>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -41,16 +42,39 @@
     <div class="workspace">
       <!-- Left / Center: Video Stage & Controls -->
       <main class="stage-container">
+        <!-- Ambient Vercel Mesh Glow -->
+        <div class="ambient-mesh-glow"></div>
+
         <!-- Canvas & Hidden Video Viewport -->
         <div class="viewport-wrapper">
-          <div id="dropzone" class="dropzone">
+          <div id="dropzone" class="dropzone-frame">
             <div class="dropzone-box">
-              <div class="dropzone-icon">📹</div>
-              <h3>Drag & Drop your video here</h3>
-              <p>Supports MP4, MOV, WebM • 100% Client-Side ($0 Server Cost)</p>
-              <div class="dropzone-divider"><span>OR</span></div>
-              <button id="btn-browse" class="btn btn-outline">Browse Video File</button>
-              <button id="btn-demo-video" class="btn btn-ghost">Use Demo Video & Sample Captions</button>
+              <div class="dropzone-icon-ring">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
+                  <path d="M12 12v9"/>
+                  <path d="m16 16-4-4-4 4"/>
+                </svg>
+              </div>
+              <h3 class="dropzone-title">Drop your video to caption</h3>
+              <p class="dropzone-subtitle">Hardware-accelerated speech recognition and animated typography for short-form video</p>
+              
+              <div class="dropzone-meta">
+                <span>9:16 VERTICAL</span>
+                <span>•</span>
+                <span>MP4 / MOV / WEBM</span>
+              </div>
+
+              <div class="dropzone-actions">
+                <button id="btn-browse" class="btn btn-primary btn-full">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Browse Video File
+                </button>
+                <button id="btn-demo-video" class="btn btn-secondary btn-full">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  Load Sample Clip
+                </button>
+              </div>
               <input type="file" id="file-input" accept="video/mp4,video/webm,video/quicktime" hidden>
             </div>
           </div>
@@ -73,8 +97,8 @@
         <!-- Scrubber & Playback Controls Bar -->
         <div id="playback-bar" class="playback-bar hidden">
           <button id="btn-play-pause" class="btn-icon" title="Play/Pause (Space)">
-            <svg id="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            <svg id="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="hidden"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            <svg id="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg id="icon-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="hidden"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
           </button>
 
           <span id="time-display" class="time-display">00:00 / 00:00</span>
@@ -84,95 +108,93 @@
           </div>
 
           <button id="btn-mute" class="btn-icon" title="Mute/Unmute">
-            <svg id="icon-vol-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-            <svg id="icon-vol-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            <svg id="icon-vol-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <svg id="icon-vol-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
           </button>
         </div>
       </main>
 
       <!-- Right Sidebar: Customizer & Transcript Editor -->
       <aside class="sidebar">
-        <!-- Smart Jumpcut Card -->
-        <div class="smart-jumpcut-box">
-          <div class="jumpcut-header">
-            <div class="jumpcut-title">
-              <span class="jumpcut-icon">⚡</span>
-              <div>
-                <div class="jumpcut-heading">Auto-Cut Silences</div>
-                <div id="jumpcut-stats" class="jumpcut-stats">Ready • Skips dead air</div>
-              </div>
-            </div>
-            <label class="toggle-switch">
-              <input type="checkbox" id="toggle-silence-remover" checked>
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div class="jumpcut-controls">
-            <span class="control-label">Trim pauses &gt;</span>
-            <select id="select-silence-threshold" class="control-select">
-              <option value="0.3">0.3s (Aggressive / High Energy)</option>
-              <option value="0.4" selected>0.4s (Optimal / TikTok Pacing)</option>
-              <option value="0.6">0.6s (Gentle / Podcast Pacing)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Sidebar Navigation Tabs -->
+        <!-- Vercel-Style Tabs -->
         <div class="sidebar-tabs">
           <button class="tab-btn active" data-tab="tab-styles">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
-            Styles & Presets
+            Design
           </button>
           <button class="tab-btn" data-tab="tab-transcript">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             Transcript (<span id="transcript-count">0</span>)
           </button>
         </div>
 
-        <!-- Tab 1: Styles & Presets -->
+        <!-- Tab 1: Design & Styles -->
         <div id="tab-styles" class="tab-pane active">
-          <!-- Preset Selector -->
+          <!-- Smart Silence Remover Card (Hidden when disabled in Settings) -->
+          <div id="smart-jumpcut-card" class="smart-jumpcut-card hidden">
+            <div class="jumpcut-header">
+              <div class="jumpcut-info">
+                <span class="badge-tag">AUTO-CUT</span>
+                <span id="jumpcut-stats" class="jumpcut-stats">0 pauses found</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-silence-remover">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="jumpcut-sub">
+              <span>Threshold</span>
+              <select id="select-silence-threshold" class="control-select-sm">
+                <option value="0.3">0.3s (High Energy)</option>
+                <option value="0.4" selected>0.4s (TikTok Pacing)</option>
+                <option value="0.6">0.6s (Podcast Pacing)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Creator Presets (Balanced 2x3 Grid) -->
           <div class="panel-section">
-            <label class="section-title">CREATOR PRESETS</label>
+            <div class="section-header">
+              <span class="mono-eyebrow">PRESETS</span>
+              <span class="section-hint">6 Styles</span>
+            </div>
             <div class="presets-grid">
               <div class="preset-card active" data-preset="hormozi">
                 <div class="preset-badge">HORMOZI</div>
                 <div class="preset-sample font-montserrat" style="color:#00FF66;">VIRAL GROW</div>
-                <span class="preset-desc">Lime pop, black stroke, all-caps</span>
               </div>
 
               <div class="preset-card" data-preset="editorial">
-                <div class="preset-badge">VOX / HIGHLIGHT</div>
-                <div class="preset-sample font-playfair" style="background:#FF0066; color:#FFF; padding:1px 6px; border-radius:3px; display:inline-block; font-size:0.8rem; font-style:italic;">charge, which</div>
-                <span class="preset-desc">Hot pink marker tape, serif font</span>
+                <div class="preset-badge">VOX HIGHLIGHT</div>
+                <div class="preset-sample font-playfair" style="background:#FF0066; color:#FFF; padding:0 4px; border-radius:2px; font-style:italic;">charge, which</div>
               </div>
 
               <div class="preset-card" data-preset="mrbeast">
                 <div class="preset-badge">BEAST</div>
                 <div class="preset-sample font-bangers" style="color:#FFE600;">$1,000,000</div>
-                <span class="preset-desc">Comic punch, yellow glow, tilted</span>
               </div>
 
               <div class="preset-card" data-preset="minimal">
                 <div class="preset-badge">MINIMAL</div>
                 <div class="preset-sample font-inter" style="color:#FFFFFF;">Clean modern</div>
-                <span class="preset-desc">Elegant box, crisp white font</span>
               </div>
 
               <div class="preset-card" data-preset="terminal">
                 <div class="preset-badge">TERMINAL</div>
                 <div class="preset-sample font-mono" style="color:#00FFAA;">&gt; DEV_MODE</div>
-                <span class="preset-desc">Monospace, cyber scanline vibe</span>
+              </div>
+
+              <div class="preset-card" data-preset="broadcast">
+                <div class="preset-badge">BROADCAST</div>
+                <div class="preset-sample font-montserrat" style="color:#00D4FF;">CYAN PUNCH</div>
               </div>
             </div>
           </div>
 
-          <!-- Fine-Tuning Controls -->
+          <!-- Typography & Formatting -->
           <div class="panel-section">
-            <label class="section-title">TYPOGRAPHY & POSITION</label>
+            <span class="mono-eyebrow">TYPOGRAPHY</span>
             
             <div class="control-row">
-              <span class="control-label">Font Family</span>
+              <span class="control-label">Typeface</span>
               <select id="ctrl-font-family" class="control-select">
                 <option value="Playfair Display">Playfair Display (Serif)</option>
                 <option value="Montserrat">Montserrat Black</option>
@@ -182,56 +204,57 @@
               </select>
             </div>
 
-            <div class="control-row">
-              <span class="control-label">Font Size</span>
-              <div class="slider-group">
+            <div class="dual-slider-row">
+              <div class="compact-slider-item">
+                <div class="slider-header">
+                  <span>Size</span>
+                  <span id="val-font-size" class="slider-val">44px</span>
+                </div>
                 <input type="range" id="ctrl-font-size" min="24" max="72" value="44">
-                <span id="val-font-size" class="slider-val">44px</span>
+              </div>
+              <div class="compact-slider-item">
+                <div class="slider-header">
+                  <span>Outline</span>
+                  <span id="val-stroke-width" class="slider-val">10px</span>
+                </div>
+                <input type="range" id="ctrl-stroke-width" min="0" max="18" value="10">
               </div>
             </div>
 
-            <div class="control-row">
-              <span class="control-label">Vertical Position</span>
-              <div class="slider-group">
-                <input type="range" id="ctrl-pos-y" min="20" max="90" value="72">
+            <div class="single-slider-row">
+              <div class="slider-header">
+                <span>Vertical Position</span>
                 <span id="val-pos-y" class="slider-val">72%</span>
               </div>
-            </div>
-
-            <div class="control-row">
-              <span class="control-label">Outline Border</span>
-              <div class="slider-group">
-                <input type="range" id="ctrl-stroke-width" min="0" max="18" value="10">
-                <span id="val-stroke-width" class="slider-val">10px</span>
-              </div>
+              <input type="range" id="ctrl-pos-y" min="20" max="90" value="72">
             </div>
           </div>
 
-          <!-- Colors & Animation -->
+          <!-- Color Swatches & Motion -->
           <div class="panel-section">
-            <label class="section-title">COLORS & ANIMATION</label>
+            <span class="mono-eyebrow">COLORS & MOTION</span>
             
-            <div class="color-picker-grid">
-              <div class="color-item">
-                <span>Active Word</span>
+            <div class="color-chips-grid">
+              <label class="color-chip" title="Active Spoken Word">
                 <input type="color" id="ctrl-active-color" value="#00FF66">
-              </div>
-              <div class="color-item">
-                <span>Default Text</span>
+                <span class="color-chip-label">Active Word</span>
+              </label>
+              <label class="color-chip" title="Default Text">
                 <input type="color" id="ctrl-text-color" value="#FFFFFF">
-              </div>
-              <div class="color-item">
-                <span>Stroke Border</span>
+                <span class="color-chip-label">Text Color</span>
+              </label>
+              <label class="color-chip" title="Outline Border">
                 <input type="color" id="ctrl-stroke-color" value="#000000">
-              </div>
-              <div class="color-item">
-                <span>Marker Tape</span>
+                <span class="color-chip-label">Outline</span>
+              </label>
+              <label class="color-chip" title="Marker Tape">
                 <input type="color" id="ctrl-tape-color" value="#FF0066">
-              </div>
+                <span class="color-chip-label">Marker Tape</span>
+              </label>
             </div>
 
             <div class="control-row mt-3">
-              <span class="control-label">Word Animation</span>
+              <span class="control-label">Word Motion</span>
               <select id="ctrl-animation" class="control-select">
                 <option value="bounce">Bouncy Pop (Scale 1.15x)</option>
                 <option value="glow">Neon Glow</option>
@@ -239,19 +262,16 @@
               </select>
             </div>
 
-            <div class="control-row mt-2">
-              <span class="control-label">All-Caps Text</span>
-              <label class="toggle-switch">
+            <div class="toggles-grid mt-2">
+              <label class="toggle-card">
+                <span class="toggle-text">All-Caps</span>
                 <input type="checkbox" id="ctrl-uppercase" checked>
-                <span class="toggle-slider"></span>
+                <span class="toggle-slider-sm"></span>
               </label>
-            </div>
-
-            <div class="control-row mt-2">
-              <span class="control-label">Auto Emojis (🔥, 🚀, 💸)</span>
-              <label class="toggle-switch">
+              <label class="toggle-card">
+                <span class="toggle-text">Auto Emojis</span>
                 <input type="checkbox" id="ctrl-emojis" checked>
-                <span class="toggle-slider"></span>
+                <span class="toggle-slider-sm"></span>
               </label>
             </div>
           </div>
@@ -264,7 +284,7 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
               Transcribe with Whisper AI
             </button>
-            <button id="btn-load-sample-transcript" class="btn btn-outline btn-full mt-2">
+            <button id="btn-load-sample-transcript" class="btn btn-secondary btn-full mt-2">
               Load Sample Captions
             </button>
           </div>
@@ -294,8 +314,68 @@
           <span id="export-percent" class="export-percent">0%</span>
           <div id="export-download-area" class="export-download-area hidden">
             <a id="btn-download-video" class="btn btn-primary btn-full" download="captioned-video.mp4">
-              Download Captioned MP4 🎬
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Captioned MP4
             </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <h3>Studio Settings</h3>
+          </div>
+          <button id="btn-close-settings" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="settings-group">
+            <div class="mono-eyebrow mb-2">AUDIO & EDITING</div>
+            
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">
+                  <strong>Auto-Cut Silences</strong>
+                  <span class="badge-beta">BETA</span>
+                </div>
+                <p class="settings-row-desc">Automatically detect and jump-cut dead pauses in video</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-toggle-silence">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-sub-row" id="setting-silence-options" style="display: none;">
+              <span class="control-label">Silence threshold</span>
+              <select id="setting-silence-threshold" class="control-select">
+                <option value="0.3">0.3s (High Energy / Aggressive)</option>
+                <option value="0.4" selected>0.4s (TikTok / Reels Optimal)</option>
+                <option value="0.6">0.6s (Gentle / Podcast)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-group mt-3">
+            <div class="mono-eyebrow mb-2">CLIENT-SIDE PERFORMANCE</div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <strong>Whisper AI Engine</strong>
+                <p class="settings-row-desc">Transformers.js (Quantized int8 • 39MB)</p>
+              </div>
+              <span class="badge-pill">WebGPU / WASM</span>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <strong>Privacy Guarantee</strong>
+                <p class="settings-row-desc">Video and audio stay strictly in your local browser</p>
+              </div>
+              <span class="badge-pill" style="color:var(--accent-green);">Zero Cloud</span>
+            </div>
           </div>
         </div>
       </div>

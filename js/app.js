@@ -18,10 +18,12 @@ class AutoCaptionApp {
     
     this.engine = new SubtitleEngine();
     this.silenceDetector = new SilenceDetector(0.4);
+    this.silenceDetector.isEnabled = false; // Turned off by default as requested
     this.exporter = new VideoExporter(this.canvas, this.video, this.engine, this.silenceDetector);
     
     this.currentFile = null;
     this.isPlaying = false;
+    this.isJumping = false;
     this.rafId = null;
     this.worker = null;
 
@@ -57,9 +59,18 @@ class AutoCaptionApp {
     this.transcriptCount = document.getElementById('transcript-count');
 
     // Smart Silence Remover Controls
+    this.smartJumpcutCard = document.getElementById('smart-jumpcut-card');
     this.toggleSilenceRemover = document.getElementById('toggle-silence-remover');
     this.selectSilenceThreshold = document.getElementById('select-silence-threshold');
     this.jumpcutStats = document.getElementById('jumpcut-stats');
+
+    // Settings Modal
+    this.btnSettings = document.getElementById('btn-settings');
+    this.settingsModal = document.getElementById('settings-modal');
+    this.btnCloseSettings = document.getElementById('btn-close-settings');
+    this.settingToggleSilence = document.getElementById('setting-toggle-silence');
+    this.settingSilenceOptions = document.getElementById('setting-silence-options');
+    this.settingSilenceThreshold = document.getElementById('setting-silence-threshold');
 
     // Style Controls
     this.ctrlFontFamily = document.getElementById('ctrl-font-family');
@@ -166,14 +177,45 @@ class AutoCaptionApp {
       });
     });
 
-    // Smart Silence Remover Events
+    // Settings Modal Events
+    this.btnSettings?.addEventListener('click', () => {
+      this.settingsModal.classList.remove('hidden');
+    });
+    this.btnCloseSettings?.addEventListener('click', () => {
+      this.settingsModal.classList.add('hidden');
+    });
+
+    // Settings Auto-Cut Toggle (BETA)
+    this.settingToggleSilence?.addEventListener('change', (e) => {
+      const isEnabled = e.target.checked;
+      this.silenceDetector.isEnabled = isEnabled;
+      if (this.toggleSilenceRemover) this.toggleSilenceRemover.checked = isEnabled;
+      if (this.settingSilenceOptions) this.settingSilenceOptions.style.display = isEnabled ? 'flex' : 'none';
+      if (this.smartJumpcutCard) this.smartJumpcutCard.classList.toggle('hidden', !isEnabled);
+      this.recalculateSilences();
+    });
+
+    this.settingSilenceThreshold?.addEventListener('change', (e) => {
+      const val = Number(e.target.value);
+      this.silenceDetector.setThreshold(val);
+      if (this.selectSilenceThreshold) this.selectSilenceThreshold.value = e.target.value;
+      this.recalculateSilences();
+    });
+
+    // Main Card Silence Remover Events
     this.toggleSilenceRemover?.addEventListener('change', (e) => {
-      this.silenceDetector.isEnabled = e.target.checked;
+      const isEnabled = e.target.checked;
+      this.silenceDetector.isEnabled = isEnabled;
+      if (this.settingToggleSilence) this.settingToggleSilence.checked = isEnabled;
+      if (this.settingSilenceOptions) this.settingSilenceOptions.style.display = isEnabled ? 'flex' : 'none';
+      if (this.smartJumpcutCard) this.smartJumpcutCard.classList.toggle('hidden', !isEnabled);
       this.recalculateSilences();
     });
 
     this.selectSilenceThreshold?.addEventListener('change', (e) => {
-      this.silenceDetector.setThreshold(Number(e.target.value));
+      const val = Number(e.target.value);
+      this.silenceDetector.setThreshold(val);
+      if (this.settingSilenceThreshold) this.settingSilenceThreshold.value = e.target.value;
       this.recalculateSilences();
     });
 
@@ -338,11 +380,13 @@ class AutoCaptionApp {
 
   startRenderLoop() {
     const loop = () => {
-      // Smart Silence Remover: Instantly jump-cut dead air pauses
-      if (this.isPlaying && !this.video.paused && this.silenceDetector.isEnabled) {
+      // Smart Silence Remover: Instantly jump-cut dead air pauses (with seek guard)
+      if (this.isPlaying && !this.video.paused && !this.video.seeking && !this.isJumping && this.silenceDetector.isEnabled) {
         const jumpTarget = this.silenceDetector.getJumpTarget(this.video.currentTime);
-        if (jumpTarget !== null && jumpTarget > this.video.currentTime + 0.05) {
+        if (jumpTarget !== null && jumpTarget > this.video.currentTime + 0.08) {
+          this.isJumping = true;
           this.video.currentTime = jumpTarget;
+          setTimeout(() => { this.isJumping = false; }, 90);
         }
       }
 
@@ -569,8 +613,8 @@ class AutoCaptionApp {
   }
 
   setStatus(type, text) {
-    this.statusPill.className = `status-pill status-${type}`;
-    this.statusText.textContent = text;
+    if (this.statusPill) this.statusPill.className = `status-pill status-${type}`;
+    if (this.statusText) this.statusText.textContent = text;
   }
 }
 

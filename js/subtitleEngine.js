@@ -85,6 +85,22 @@ export const PRESETS = {
     tiltAngle: 0,
     bgBox: true,
     markerTape: false
+  },
+  broadcast: {
+    presetName: 'broadcast',
+    fontFamily: 'Montserrat',
+    fontSize: 42,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    textColor: '#FFFFFF',
+    activeWordColor: '#00D4FF', // Electric Cyan
+    strokeColor: '#000000',
+    strokeWidth: 8,
+    animationType: 'bounce',
+    positionYPercent: 74,
+    tiltAngle: 0,
+    bgBox: false,
+    markerTape: false
   }
 };
 
