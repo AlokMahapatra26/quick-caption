@@ -27,6 +27,59 @@ export type PresetKey =
 export type AnimationType = 'bounce' | 'glow' | 'none';
 export type TextTransform = 'uppercase' | 'none' | 'capitalize';
 
+export type TransitionScope = 'all' | 'emphasized';
+export type TransitionPhase = 'in' | 'hold' | 'out';
+
+export type InOutTransitionId =
+  | 'none'
+  | 'fade'
+  | 'pop'
+  | 'zoom'
+  | 'scale'
+  | 'slideUp'
+  | 'slideDown'
+  | 'slideLeft'
+  | 'slideRight'
+  | 'riseUp'
+  | 'riseDown'
+  | 'blurRise'
+  | 'hookLeft'
+  | 'hookRight'
+  | 'punch'
+  | 'slam'
+  | 'wobble'
+  | 'drop'
+  | 'bounce'
+  | 'spinIn'
+  | 'typewriter'
+  | 'typeOn'
+  | 'expand'
+  | 'flicker'
+  | 'glitch'
+  | 'softFocus';
+
+export type HoldTransitionId =
+  | 'template'
+  | 'none'
+  | 'float'
+  | 'pulse'
+  | 'heartbeat'
+  | 'shake'
+  | 'swing'
+  | 'breathe'
+  | 'jello';
+
+export interface PhaseTransitionSet {
+  in: InOutTransitionId;
+  hold: HoldTransitionId;
+  out: InOutTransitionId;
+}
+
+export interface TransitionConfig {
+  all: PhaseTransitionSet;
+  emphasized: PhaseTransitionSet;
+}
+
 export interface RawWord {
   id?: string;
   word: string;

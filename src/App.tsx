@@ -66,6 +66,7 @@ export function App() {
           isGeneratingDemo={studio.isGeneratingDemo}
           isPlaying={studio.isPlaying}
           isMuted={studio.isMuted}
+          isLooping={studio.isLooping}
           currentTime={studio.currentTime}
           duration={studio.duration}
           loader={studio.loader}
@@ -78,14 +79,17 @@ export function App() {
           onTogglePlay={studio.togglePlay}
           onSeekPercent={studio.seekToPercent}
           onToggleMute={studio.toggleMute}
+          onToggleLoop={studio.toggleLoop}
         />
 
         <Sidebar
+          hasVideo={studio.hasVideo}
           wordCount={studio.wordCount}
           activePreset={studio.activePreset}
           styleConfig={studio.styleConfig}
           useUppercase={studio.useUppercase}
           useEmojis={studio.useEmojis}
+          transitionConfig={studio.transitionConfig}
           segmenterStatus={studio.segmenterStatus}
           silenceEnabled={studio.silenceEnabled}
           silenceThreshold={studio.silenceThreshold}
@@ -97,6 +101,8 @@ export function App() {
           onUpdateStyle={studio.updateStyleParam}
           onToggleUppercase={studio.toggleUppercase}
           onToggleEmojis={studio.toggleEmojis}
+          onUpdateTransition={studio.updateTransition}
+          onPreviewTransition={studio.previewTransition}
           onToggleSilence={studio.handleToggleSilence}
           onChangeSilenceThreshold={studio.handleChangeSilenceThreshold}
           onRunWhisper={() => void studio.runSpeechRecognition()}

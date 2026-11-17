@@ -105,3 +105,23 @@ export function MicIcon({ size = 14 }: { size?: number }) {
     </svg>
   );
 }
+
+export function RepeatIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="17 2 21 6 17 10" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <polyline points="7 22 3 18 7 14" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+    </svg>
+  );
+}

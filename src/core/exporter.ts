@@ -37,6 +37,8 @@ export class VideoExporter {
 
     const originalTime = this.video.currentTime;
     const wasPlaying = !this.video.paused;
+    const wasLooping = this.video.loop;
+    this.video.loop = false;
     this.video.pause();
 
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -121,6 +123,7 @@ export class VideoExporter {
       const result = await exportPromise;
       onProgress(100);
 
+      this.video.loop = wasLooping;
       this.video.currentTime = originalTime;
       if (wasPlaying) void this.video.play();
       this.isExporting = false;
@@ -129,6 +132,7 @@ export class VideoExporter {
     } catch (err) {
       if (interval) clearInterval(interval);
       this.isExporting = false;
+      this.video.loop = wasLooping;
       this.video.currentTime = originalTime;
       throw err;
     }

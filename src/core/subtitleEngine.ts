@@ -1,9 +1,21 @@
 import { EMOJI_MAP, PRESETS } from './presets';
+import {
+  applyCanvasTransform,
+  computeTransitionTransform,
+  createDefaultTransitionConfig,
+  isIdentityTransform,
+  type TransitionTransform,
+} from './transitions';
 import type {
+  HoldTransitionId,
+  InOutTransitionId,
   PresetKey,
   RawWord,
   SubtitleSegment,
   SubtitleStyleConfig,
+  TransitionConfig,
+  TransitionPhase,
+  TransitionScope,
   WordTimestamp,
 } from '../types/caption';
 
@@ -21,6 +33,7 @@ interface WordLayout {
 export class SubtitleEngine {
   currentPreset: PresetKey = 'hormozi';
   styleConfig: SubtitleStyleConfig = { ...PRESETS.hormozi };
+  transitionConfig: TransitionConfig = createDefaultTransitionConfig();
   rawWords: RawWord[] = [];
   segments: SubtitleSegment[] = [];
   useEmojis = true;
@@ -38,6 +51,52 @@ export class SubtitleEngine {
     value: SubtitleStyleConfig[K]
   ): void {
     this.styleConfig[key] = value;
+  }
+
+  setTransition(
+    scope: TransitionScope,
+    phase: TransitionPhase,
+    value: InOutTransitionId | HoldTransitionId
+  ): TransitionConfig {
+    const nextScope = {
+      ...this.transitionConfig[scope],
+      [phase]: value,
+    };
+    this.transitionConfig = {
+      ...this.transitionConfig,
+      [scope]: nextScope,
+    };
+    return this.transitionConfig;
+  }
+
+  private shouldUseTemplateBounce(): boolean {
+    return (
+      this.styleConfig.animationType === 'bounce' &&
+      this.transitionConfig.emphasized.hold === 'template'
+    );
+  }
+
+  private applyEmphasizedWordTransition(
+    ctx: CanvasRenderingContext2D,
+    currentTime: number,
+    word: WordTimestamp,
+    anchorX: number,
+    anchorY: number,
+    scaleFactor: number,
+    clipW = 0,
+    clipH = 0
+  ): void {
+    const t = computeTransitionTransform(
+      this.transitionConfig.emphasized,
+      currentTime,
+      word.start,
+      word.end,
+      scaleFactor,
+      0.22
+    );
+    if (!isIdentityTransform(t)) {
+      applyCanvasTransform(ctx, t, anchorX, anchorY, clipW, clipH);
+    }
   }
 
   /**
@@ -96,10 +155,34 @@ export class SubtitleEngine {
     }
   }
 
+  getSegmentEffectiveEnd(index: number): number {
+    const seg = this.segments[index];
+    if (!seg) return 0;
+    const nextSeg = this.segments[index + 1];
+    if (nextSeg && nextSeg.start > seg.end) {
+      return Math.min(seg.end + 0.14, nextSeg.start - 0.004);
+    }
+    if (nextSeg && nextSeg.start <= seg.end) {
+      return seg.end;
+    }
+    return seg.end + 0.14;
+  }
+
+  getActiveSegmentWithMeta(
+    currentTime: number
+  ): { segment: SubtitleSegment; effectiveEnd: number } | undefined {
+    for (let i = 0; i < this.segments.length; i++) {
+      const seg = this.segments[i];
+      const effectiveEnd = this.getSegmentEffectiveEnd(i);
+      if (currentTime >= seg.start && currentTime <= effectiveEnd) {
+        return { segment: seg, effectiveEnd };
+      }
+    }
+    return undefined;
+  }
+
   getActiveSegment(currentTime: number): SubtitleSegment | undefined {
-    return this.segments.find(
-      (s) => currentTime >= s.start && currentTime <= s.end + 0.15
-    );
+    return this.getActiveSegmentWithMeta(currentTime)?.segment;
   }
 
   /**
@@ -122,8 +205,24 @@ export class SubtitleEngine {
       ctx.fillRect(0, 0, width, height);
     }
 
-    const segment = this.getActiveSegment(currentTime);
-    if (!segment) return;
+    const active = this.getActiveSegmentWithMeta(currentTime);
+    if (!active) return;
+    const { segment, effectiveEnd } = active;
+
+    const scaleFactor = height / 1000;
+    const posX = width / 2;
+    const posY = height * (this.styleConfig.positionYPercent / 100);
+
+    // Segment-level ("All captions") IN -> HOLD -> OUT transition transform
+    const segTransform = computeTransitionTransform(
+      this.transitionConfig.all,
+      currentTime,
+      segment.start,
+      effectiveEnd,
+      scaleFactor,
+      0.28
+    );
+    if (segTransform.alpha <= 0.005) return;
 
     if (this.styleConfig.behindPerson) {
       this.renderBehindPerson(
@@ -132,38 +231,43 @@ export class SubtitleEngine {
         height,
         currentTime,
         segment,
-        foregroundCutout
+        foregroundCutout,
+        segTransform
       );
       return;
     }
 
+    ctx.save();
+    if (!isIdentityTransform(segTransform)) {
+      applyCanvasTransform(ctx, segTransform, posX, posY, width * 0.92, height);
+    }
+
     if (this.styleConfig.editorialStack) {
       this.renderEditorialStack(ctx, width, height, currentTime, segment);
+      ctx.restore();
       return;
     }
 
     if (this.styleConfig.swissGrid) {
       this.renderSwissGrid(ctx, width, height, currentTime, segment);
+      ctx.restore();
       return;
     }
 
     if (this.styleConfig.auraPoster) {
       this.renderAuraPoster(ctx, width, height, currentTime, segment);
+      ctx.restore();
       return;
     }
 
     if (this.styleConfig.bigRedPoster) {
       this.renderBigRed(ctx, width, height, currentTime, segment);
+      ctx.restore();
       return;
     }
 
-    ctx.save();
-
-    const scaleFactor = height / 1000;
     const fontSize = this.styleConfig.fontSize * scaleFactor;
     const strokeWidth = this.styleConfig.strokeWidth * scaleFactor;
-    const posX = width / 2;
-    const posY = height * (this.styleConfig.positionYPercent / 100);
 
     const fontPrefix = this.styleConfig.kineticBlur ? 'italic ' : '';
     ctx.font = `${fontPrefix}${this.styleConfig.fontWeight} ${fontSize}px "${this.styleConfig.fontFamily}", sans-serif`;
@@ -358,7 +462,7 @@ export class SubtitleEngine {
       ctx.save();
 
       let wordScale = 1.0;
-      if (isCurrent && this.styleConfig.animationType === 'bounce') {
+      if (isCurrent && this.shouldUseTemplateBounce()) {
         const progress = Math.min(
           1,
           (currentTime - layout.wordObj.start) / 0.15
@@ -378,6 +482,19 @@ export class SubtitleEngine {
         ctx.translate(layout.startX, posY);
         ctx.scale(wordScale, wordScale);
         ctx.translate(-layout.startX, -posY);
+      }
+
+      if (isCurrent) {
+        this.applyEmphasizedWordTransition(
+          ctx,
+          currentTime,
+          layout.wordObj,
+          layout.startX,
+          posY,
+          scaleFactor,
+          layout.width + 32 * scaleFactor,
+          fontSize * 2.6
+        );
       }
 
       // Active-word sliding capsule pill (Ali Abdaal / CapCut viral style)
@@ -765,7 +882,8 @@ export class SubtitleEngine {
     height: number,
     currentTime: number,
     segment: SubtitleSegment,
-    foregroundCutout: HTMLCanvasElement | null
+    foregroundCutout: HTMLCanvasElement | null,
+    segTransform: TransitionTransform
   ): void {
     const scaleFactor = height / 1000;
     const posX = width / 2;
@@ -804,13 +922,27 @@ export class SubtitleEngine {
 
       // Snappy entrance scale pop on the hero word
       let heroScale = 1.0;
-      if (this.styleConfig.animationType === 'bounce') {
+      if (this.shouldUseTemplateBounce()) {
         const progress = Math.min(
           1,
           Math.max(0, (currentTime - activeWord.start) / 0.16)
         );
         heroScale = 0.94 + 0.06 * Math.sin((progress * Math.PI) / 2);
       }
+
+      if (!isIdentityTransform(segTransform)) {
+        applyCanvasTransform(ctx, segTransform, posX, heroY, width * 0.96, height);
+      }
+      this.applyEmphasizedWordTransition(
+        ctx,
+        currentTime,
+        activeWord,
+        posX,
+        heroY,
+        scaleFactor,
+        width * 0.96,
+        heroFontSize * 2.4
+      );
 
       if (heroScale !== 1.0) {
         ctx.translate(posX, heroY);
@@ -883,6 +1015,9 @@ export class SubtitleEngine {
     ctx.save();
     const fgFontSize = this.styleConfig.fontSize * scaleFactor * 0.72;
     const fgY = height * 0.8;
+    if (!isIdentityTransform(segTransform)) {
+      applyCanvasTransform(ctx, segTransform, posX, fgY, width * 0.92, height);
+    }
 
     ctx.font = `700 ${fgFontSize}px "Inter", "${this.styleConfig.fontFamily}", sans-serif`;
     ctx.textAlign = 'center';
@@ -913,6 +1048,18 @@ export class SubtitleEngine {
       const isCurrent =
         currentTime >= layout.wordObj.start && currentTime <= layout.wordObj.end;
       ctx.save();
+      if (isCurrent) {
+        this.applyEmphasizedWordTransition(
+          ctx,
+          currentTime,
+          layout.wordObj,
+          layout.startX,
+          fgY,
+          scaleFactor,
+          layout.width + 24 * scaleFactor,
+          fgFontSize * 2.4
+        );
+      }
       ctx.fillStyle = isCurrent
         ? this.styleConfig.activeWordColor
         : this.styleConfig.textColor;
@@ -1021,14 +1168,23 @@ export class SubtitleEngine {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    let heroScale = 1.0;
-    if (this.styleConfig.animationType === 'bounce') {
+      let heroScale = 1.0;
+    if (this.shouldUseTemplateBounce()) {
       const progress = Math.min(
         1,
         Math.max(0, (currentTime - activeWord.start) / 0.16)
       );
       heroScale = 0.94 + 0.08 * Math.sin(progress * Math.PI);
     }
+
+    this.applyEmphasizedWordTransition(
+      ctx,
+      currentTime,
+      activeWord,
+      posX,
+      centerY,
+      scaleFactor
+    );
 
     if (heroScale !== 1.0) {
       ctx.translate(posX, centerY);
@@ -1163,12 +1319,24 @@ export class SubtitleEngine {
         const isFuture = currentTime < w.start;
 
         ctx.save();
-        if (isCurrent && this.styleConfig.animationType === 'bounce') {
+        if (isCurrent && this.shouldUseTemplateBounce()) {
           const progress = Math.min(1, Math.max(0, (currentTime - w.start) / 0.14));
           const pop = 1.0 + 0.05 * Math.sin(progress * Math.PI);
           ctx.translate(wordCenterX, rowCenterY);
           ctx.scale(pop, pop);
           ctx.translate(-wordCenterX, -rowCenterY);
+        }
+        if (isCurrent) {
+          this.applyEmphasizedWordTransition(
+            ctx,
+            currentTime,
+            w,
+            wordCenterX,
+            rowCenterY,
+            scaleFactor,
+            wWidth + 24 * scaleFactor,
+            row.rowFontSize * 2.2
+          );
         }
 
         ctx.globalAlpha = isCurrent ? 1.0 : isFuture ? 0.62 : 0.95;
@@ -1277,12 +1445,22 @@ export class SubtitleEngine {
       ctx.save();
       ctx.font = `${this.styleConfig.fontWeight} ${heroSize}px "${this.styleConfig.fontFamily}", sans-serif`;
 
-      if (isCurrent && this.styleConfig.animationType === 'bounce') {
+      if (isCurrent && this.shouldUseTemplateBounce()) {
         const p = Math.min(1, Math.max(0, (currentTime - heroWord.start) / 0.15));
         const s = 1.0 + 0.07 * Math.sin(p * Math.PI);
         ctx.translate(posX, heroY);
         ctx.scale(s, s);
         ctx.translate(-posX, -heroY);
+      }
+      if (isCurrent) {
+        this.applyEmphasizedWordTransition(
+          ctx,
+          currentTime,
+          heroWord,
+          posX,
+          heroY,
+          scaleFactor
+        );
       }
 
       ctx.globalAlpha = isCurrent ? 1.0 : isFuture ? 0.68 : 0.96;
@@ -1331,6 +1509,18 @@ export class SubtitleEngine {
 
         ctx.save();
         ctx.font = item.font;
+        if (isCurrent) {
+          this.applyEmphasizedWordTransition(
+            ctx,
+            currentTime,
+            item.wordObj,
+            wx,
+            subY,
+            scaleFactor,
+            item.width + 24 * scaleFactor,
+            subSize * 2.4
+          );
+        }
         ctx.globalAlpha = isCurrent ? 1.0 : isFuture ? 0.65 : 0.94;
         ctx.fillStyle = isCurrent
           ? this.styleConfig.activeWordColor
@@ -1398,7 +1588,7 @@ export class SubtitleEngine {
       ctx.save();
       ctx.font = `${this.styleConfig.fontWeight} ${line.fontSize}px "${this.styleConfig.fontFamily}", Georgia, serif`;
 
-      if (isCurrent && this.styleConfig.animationType === 'bounce') {
+      if (isCurrent && this.shouldUseTemplateBounce()) {
         const p = Math.min(
           1,
           Math.max(0, (currentTime - line.wordObj.start) / 0.16)
@@ -1407,6 +1597,16 @@ export class SubtitleEngine {
         ctx.translate(posX, ly);
         ctx.scale(s, s);
         ctx.translate(-posX, -ly);
+      }
+      if (isCurrent) {
+        this.applyEmphasizedWordTransition(
+          ctx,
+          currentTime,
+          line.wordObj,
+          posX,
+          ly,
+          scaleFactor
+        );
       }
 
       ctx.fillStyle = this.styleConfig.activeWordColor;

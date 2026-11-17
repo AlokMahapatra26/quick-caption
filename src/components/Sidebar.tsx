@@ -1,22 +1,30 @@
 import { useState } from 'react';
 import type { SegmenterStatus } from '../core/personSegmenter';
 import type {
+  HoldTransitionId,
+  InOutTransitionId,
   PresetKey,
   SubtitleSegment,
   SubtitleStyleConfig,
+  TransitionConfig,
+  TransitionPhase,
+  TransitionScope,
 } from '../types/caption';
 import { StylePanel } from './StylePanel';
 import { TemplatesPanel } from './TemplatesPanel';
 import { TranscriptPanel } from './TranscriptPanel';
+import { TransitionsPanel } from './TransitionsPanel';
 
-type SidebarTab = 'templates' | 'style' | 'transcript';
+type SidebarTab = 'templates' | 'style' | 'motion' | 'transcript';
 
 interface SidebarProps {
+  hasVideo: boolean;
   wordCount: number;
   activePreset: PresetKey;
   styleConfig: SubtitleStyleConfig;
   useUppercase: boolean;
   useEmojis: boolean;
+  transitionConfig: TransitionConfig;
   segmenterStatus: SegmenterStatus;
   silenceEnabled: boolean;
   silenceThreshold: number;
@@ -31,6 +39,15 @@ interface SidebarProps {
   ) => void;
   onToggleUppercase: (checked: boolean) => void;
   onToggleEmojis: (checked: boolean) => void;
+  onUpdateTransition: (
+    scope: TransitionScope,
+    phase: TransitionPhase,
+    value: InOutTransitionId | HoldTransitionId
+  ) => void;
+  onPreviewTransition: (
+    phase: TransitionPhase,
+    scope: TransitionScope
+  ) => void;
   onToggleSilence: (enabled: boolean) => void;
   onChangeSilenceThreshold: (threshold: number) => void;
   onRunWhisper: () => void;
@@ -61,10 +78,17 @@ export function Sidebar(props: SidebarProps) {
         </button>
         <button
           type="button"
+          className={`tab-btn${activeTab === 'motion' ? ' active' : ''}`}
+          onClick={() => setActiveTab('motion')}
+        >
+          Motion
+        </button>
+        <button
+          type="button"
           className={`tab-btn${activeTab === 'transcript' ? ' active' : ''}`}
           onClick={() => setActiveTab('transcript')}
         >
-          Transcript
+          Text
           {props.wordCount > 0 && (
             <span className="tab-count-pill">{props.wordCount}</span>
           )}
@@ -95,6 +119,15 @@ export function Sidebar(props: SidebarProps) {
           onToggleEmojis={props.onToggleEmojis}
           onToggleSilence={props.onToggleSilence}
           onChangeSilenceThreshold={props.onChangeSilenceThreshold}
+        />
+      )}
+
+      {activeTab === 'motion' && (
+        <TransitionsPanel
+          hasVideo={props.hasVideo}
+          config={props.transitionConfig}
+          onUpdateTransition={props.onUpdateTransition}
+          onPreview={props.onPreviewTransition}
         />
       )}
 

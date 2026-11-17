@@ -6,6 +6,7 @@ import {
   CloudUploadIcon,
   PauseIcon,
   PlayIcon,
+  RepeatIcon,
   UploadIcon,
   VolumeOffIcon,
   VolumeOnIcon,
@@ -18,6 +19,7 @@ interface VideoStageProps {
   isGeneratingDemo: boolean;
   isPlaying: boolean;
   isMuted: boolean;
+  isLooping: boolean;
   currentTime: number;
   duration: number;
   loader: LoaderState;
@@ -30,6 +32,7 @@ interface VideoStageProps {
   onTogglePlay: () => void;
   onSeekPercent: (percent: number) => void;
   onToggleMute: () => void;
+  onToggleLoop: () => void;
 }
 
 export function VideoStage({
@@ -39,6 +42,7 @@ export function VideoStage({
   isGeneratingDemo,
   isPlaying,
   isMuted,
+  isLooping,
   currentTime,
   duration,
   loader,
@@ -51,6 +55,7 @@ export function VideoStage({
   onTogglePlay,
   onSeekPercent,
   onToggleMute,
+  onToggleLoop,
 }: VideoStageProps) {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -134,6 +139,7 @@ export function VideoStage({
             ref={videoRef}
             id="source-video"
             playsInline
+            loop={isLooping}
             preload="auto"
             className="hidden-source-video"
             onLoadedMetadata={onLoadedMetadata}
@@ -178,6 +184,16 @@ export function VideoStage({
             onChange={(e) => onSeekPercent(Number(e.target.value))}
           />
         </div>
+
+        <button
+          type="button"
+          className={`btn-icon${isLooping ? ' active' : ''}`}
+          title={isLooping ? 'Loop: On' : 'Loop: Off'}
+          aria-pressed={isLooping}
+          onClick={onToggleLoop}
+        >
+          <RepeatIcon />
+        </button>
 
         <button
           type="button"

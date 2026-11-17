@@ -9,12 +9,18 @@ import {
 import { DEMO_SAMPLE_WORDS, PRESETS } from '../core/presets';
 import { SilenceDetector } from '../core/silenceDetector';
 import { SubtitleEngine } from '../core/subtitleEngine';
+import { createDefaultTransitionConfig } from '../core/transitions';
 import type {
   ExportResult,
+  HoldTransitionId,
+  InOutTransitionId,
   PresetKey,
   RawWord,
   SubtitleSegment,
   SubtitleStyleConfig,
+  TransitionConfig,
+  TransitionPhase,
+  TransitionScope,
   WorkerOutMessage,
 } from '../types/caption';
 
@@ -57,6 +63,7 @@ export function useStudioController() {
   const [isGeneratingDemo, setIsGeneratingDemo] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isLooping, setIsLooping] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
@@ -66,6 +73,9 @@ export function useStudioController() {
   });
   const [useUppercase, setUseUppercase] = useState(true);
   const [useEmojis, setUseEmojis] = useState(true);
+  const [transitionConfig, setTransitionConfig] = useState<TransitionConfig>(
+    () => createDefaultTransitionConfig()
+  );
 
   const [segments, setSegments] = useState<SubtitleSegment[]>([]);
   const [wordCount, setWordCount] = useState(0);
@@ -372,6 +382,15 @@ export function useStudioController() {
     setIsMuted(video.muted);
   }, []);
 
+  const toggleLoop = useCallback(() => {
+    const video = videoRef.current;
+    setIsLooping((prev) => {
+      const next = !prev;
+      if (video) video.loop = next;
+      return next;
+    });
+  }, []);
+
   // Style & Preset Mutations
   const applyPreset = useCallback((presetKey: PresetKey) => {
     const nextStyle = engineRef.current.setPreset(presetKey);
@@ -419,6 +438,72 @@ export function useStudioController() {
   const updateWordText = useCallback((wordId: string, text: string) => {
     engineRef.current.updateWordText(wordId, text);
   }, []);
+
+  const previewTransition = useCallback(
+    (phase: TransitionPhase = 'in', scope: TransitionScope = 'all') => {
+      const video = videoRef.current;
+      if (!video || !hasVideo) return;
+
+      if (engineRef.current.segments.length === 0) {
+        loadSampleCaptions();
+      }
+
+      const engine = engineRef.current;
+      const activeMeta = engine.getActiveSegmentWithMeta(video.currentTime);
+      const seg = activeMeta?.segment ?? engine.segments[0];
+      const effectiveEnd =
+        activeMeta?.effectiveEnd ?? engine.getSegmentEffectiveEnd(0);
+
+      if (seg) {
+        let seekTarget = seg.start;
+        if (scope === 'emphasized') {
+          const activeWord =
+            seg.words.find(
+              (w) => video.currentTime >= w.start && video.currentTime <= w.end
+            ) ?? seg.words[0];
+          if (activeWord) {
+            seekTarget =
+              phase === 'out'
+                ? Math.max(activeWord.start, activeWord.end - 0.28)
+                : activeWord.start;
+          }
+        } else if (phase === 'out') {
+          seekTarget = Math.max(seg.start, effectiveEnd - 0.52);
+        } else if (phase === 'hold') {
+          seekTarget = seg.start + 0.06;
+        } else {
+          seekTarget = Math.max(0, seg.start - 0.02);
+        }
+
+        video.currentTime = seekTarget;
+        setCurrentTime(seekTarget);
+      }
+
+      void video.play();
+      isPlayingRef.current = true;
+      setIsPlaying(true);
+    },
+    [hasVideo, loadSampleCaptions]
+  );
+
+  const updateTransition = useCallback(
+    (
+      scope: TransitionScope,
+      phase: TransitionPhase,
+      value: InOutTransitionId | HoldTransitionId
+    ) => {
+      const next = engineRef.current.setTransition(scope, phase, value);
+      setTransitionConfig({ ...next });
+
+      // Auto-preview immediately when user picks a visible transition so they see it live
+      const isReset =
+        value === 'none' || (phase === 'hold' && value === 'template');
+      if (!isReset && hasVideo) {
+        previewTransition(phase, scope);
+      }
+    },
+    [hasVideo, previewTransition]
+  );
 
   // Silence Remover (single source of truth for both Settings modal & Sidebar card)
   const handleToggleSilence = useCallback(
@@ -496,6 +581,7 @@ export function useStudioController() {
     isGeneratingDemo,
     isPlaying,
     isMuted,
+    isLooping,
     currentTime,
     duration,
     loader,
@@ -508,16 +594,20 @@ export function useStudioController() {
     seekToPercent,
     seekToTime,
     toggleMute,
+    toggleLoop,
     // Style & Presets
     activePreset,
     styleConfig,
     useUppercase,
     useEmojis,
+    transitionConfig,
     segmenterStatus,
     applyPreset,
     updateStyleParam,
     toggleUppercase,
     toggleEmojis,
+    updateTransition,
+    previewTransition,
     // Transcript
     segments,
     wordCount,
