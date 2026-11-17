@@ -500,6 +500,128 @@ input[type="range"]::-moz-range-thumb {
   border-bottom-color: var(--ink);
 }
 
+.tab-count-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: #52525b;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  padding: 0 5px;
+  border-radius: 999px;
+  line-height: 16px;
+}
+
+.tab-btn.active .tab-count-pill {
+  color: #09090b;
+  border-color: #d4d4d8;
+}
+
+/* CATEGORY FILTER PILLS */
+.filter-pills-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.filter-pill {
+  background: #ffffff;
+  color: #52525b;
+  border: 1px solid #e4e4e7;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-pill:hover {
+  color: #09090b;
+  border-color: #a1a1aa;
+  background: #fafafa;
+}
+
+.filter-pill.active {
+  background: #09090b;
+  color: #ffffff;
+  border-color: #09090b;
+  font-weight: 600;
+}
+
+.link-btn-inline {
+  background: transparent;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #09090b;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.15s ease;
+}
+
+.link-btn-inline:hover {
+  opacity: 0.7;
+  text-decoration: underline;
+}
+
+/* ACTIVE TEMPLATE CONTEXT STRIP (IN STYLE TAB) */
+.active-template-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 11px;
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: var(--rounded-sm);
+}
+
+.active-template-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.active-template-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #71717a;
+}
+
+.active-template-name {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #09090b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-mini-change {
+  background: #ffffff;
+  color: #09090b;
+  border: 1px solid #d4d4d8;
+  border-radius: 5px;
+  padding: 3px 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-mini-change:hover {
+  background: #09090b;
+  color: #ffffff;
+  border-color: #09090b;
+}
+
 .tab-pane {
   display: none;
   flex: 1;
@@ -663,7 +785,199 @@ input[type="range"]::-moz-range-thumb {
   text-overflow: ellipsis;
 }
 
+.preset-card-behind {
+  background: linear-gradient(135deg, #0f0f11 0%, #19181d 100%);
+}
+
+.segmenter-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.segmenter-dot-loading {
+  background: #fbbf24;
+  box-shadow: 0 0 6px #fbbf24;
+}
+
+.segmenter-dot-ready {
+  background: #34d399;
+  box-shadow: 0 0 6px #34d399;
+}
+
+.segmenter-dot-error {
+  background: #f87171;
+}
+
+.preset-card-featured {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 11px;
+  background: linear-gradient(135deg, #0f0f11 0%, #17171c 100%);
+}
+
+.preset-featured-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.preset-featured-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-behind {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #09090b;
+  background: #f59e0b;
+  padding: 1.5px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.badge-editorial {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #09090b;
+  background: #f4f4f5;
+  padding: 1.5px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.preset-stack-preview {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.preset-stack-kicker {
+  font-family: 'Inter', sans-serif;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #a1a1aa;
+}
+
+.preset-stack-hero {
+  font-size: 14px;
+  font-weight: 800;
+  font-style: italic;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.preset-swiss-preview {
+  display: flex;
+  flex-direction: column;
+  line-height: 0.95;
+  gap: 1px;
+}
+
+.swiss-big {
+  font-size: 14px;
+  font-weight: 900;
+  color: #ffe600;
+  letter-spacing: 0.04em;
+}
+
+.swiss-small {
+  font-size: 7.5px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.06em;
+}
+
+.preset-aura-preview {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.aura-big {
+  font-size: 13px;
+  font-weight: 900;
+  color: #ffe600;
+}
+
+.aura-serif {
+  font-size: 12px;
+  font-weight: 700;
+  font-style: italic;
+  color: #ffffff;
+}
+
+.preset-bigred-preview {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  line-height: 1;
+}
+
+.bigred-bg {
+  font-size: 16px;
+  font-weight: 900;
+  color: #e11d48;
+  letter-spacing: 0.02em;
+}
+
+.bigred-mini {
+  position: absolute;
+  left: 16px;
+  font-size: 9px;
+  font-weight: 700;
+  font-style: italic;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+}
+
+.segmenter-chip {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #a1a1aa;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 3px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.segmenter-chip-loading {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.segmenter-chip-ready {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.segmenter-chip-error {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.1);
+}
+
 .font-montserrat { font-family: 'Montserrat', sans-serif; }
+.font-poppins { font-family: 'Poppins', sans-serif; }
+.font-caveat { font-family: 'Caveat', cursive; }
+.font-pixel { font-family: 'Silkscreen', monospace; }
 .font-bangers { font-family: 'Bangers', cursive; }
 .font-inter { font-family: 'Inter', sans-serif; }
 .font-mono { font-family: var(--font-mono); }

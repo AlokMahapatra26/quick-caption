@@ -1,32 +1,39 @@
-/**
- * AutoCaption Studio • Smart Silence Remover & Auto Jump-Cutter
- * Detects awkward dead-air pauses (> 0.4s) from speech timestamps or audio energy,
- * allowing instant client-side jump-cutting during playback and export.
- */
+import type {
+  RawWord,
+  SilenceDetectionResult,
+  SilenceZone,
+} from '../types/caption';
 
+/**
+ * Smart Silence Remover & Auto Jump-Cutter
+ * Detects dead-air pauses (> thresholdSecs) from speech timestamps.
+ */
 export class SilenceDetector {
+  thresholdSecs: number;
+  paddingSecs: number;
+  silenceZones: SilenceZone[] = [];
+  totalTimeSaved = 0;
+  isEnabled = false;
+
   constructor(thresholdSecs = 0.4, paddingSecs = 0.06) {
-    this.thresholdSecs = thresholdSecs; // Minimum pause duration to cut
-    this.paddingSecs = paddingSecs;     // Natural breathing room padding (60ms)
-    this.silenceZones = [];
-    this.totalTimeSaved = 0;
-    this.isEnabled = true;
+    this.thresholdSecs = thresholdSecs;
+    this.paddingSecs = paddingSecs;
   }
 
-  setThreshold(thresholdSecs) {
+  setThreshold(thresholdSecs: number): void {
     this.thresholdSecs = thresholdSecs;
   }
 
-  /**
-   * Analyzes word timestamps to locate dead-air pauses between words.
-   * @param {Array} words - Array of { word, start, end }
-   * @param {number} totalDuration - Video duration in seconds
-   */
-  detectFromWords(words, totalDuration = 0) {
+  detectFromWords(
+    words: RawWord[],
+    totalDuration = 0
+  ): SilenceDetectionResult {
     this.silenceZones = [];
     this.totalTimeSaved = 0;
 
-    if (!words || words.length === 0) return { zones: [], timeSaved: 0 };
+    if (!words || words.length === 0) {
+      return { zones: [], timeSaved: 0, count: 0 };
+    }
 
     // 1. Initial silence before first word
     if (words[0].start > this.thresholdSecs + this.paddingSecs) {
@@ -35,7 +42,7 @@ export class SilenceDetector {
       this.silenceZones.push({
         start: zoneStart,
         end: zoneEnd,
-        duration: zoneEnd - zoneStart
+        duration: zoneEnd - zoneStart,
       });
     }
 
@@ -53,7 +60,7 @@ export class SilenceDetector {
           this.silenceZones.push({
             start: zoneStart,
             end: zoneEnd,
-            duration: zoneEnd - zoneStart
+            duration: zoneEnd - zoneStart,
           });
         }
       }
@@ -68,26 +75,24 @@ export class SilenceDetector {
         this.silenceZones.push({
           start: zoneStart,
           end: zoneEnd,
-          duration: zoneEnd - zoneStart
+          duration: zoneEnd - zoneStart,
         });
       }
     }
 
-    // Calculate total time saved
-    this.totalTimeSaved = this.silenceZones.reduce((acc, z) => acc + z.duration, 0);
+    this.totalTimeSaved = this.silenceZones.reduce(
+      (acc, z) => acc + z.duration,
+      0
+    );
 
     return {
       zones: this.silenceZones,
       timeSaved: Number(this.totalTimeSaved.toFixed(1)),
-      count: this.silenceZones.length
+      count: this.silenceZones.length,
     };
   }
 
-  /**
-   * Checks if current playback time is inside a dead-air zone.
-   * If yes, returns the jump target timestamp to instantly skip forward.
-   */
-  getJumpTarget(currentTime) {
+  getJumpTarget(currentTime: number): number | null {
     if (!this.isEnabled) return null;
     for (let i = 0; i < this.silenceZones.length; i++) {
       const zone = this.silenceZones[i];
@@ -98,4 +103,3 @@ export class SilenceDetector {
     return null;
   }
 }
-
