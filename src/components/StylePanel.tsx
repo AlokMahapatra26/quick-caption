@@ -107,14 +107,36 @@ export function StylePanel({
             value={styleConfig.fontFamily}
             onChange={(e) => onUpdateStyle('fontFamily', e.target.value)}
           >
-            <option value="Playfair Display">Playfair Display (Serif)</option>
-            <option value="Montserrat">Montserrat Black</option>
-            <option value="Poppins">Poppins Bold</option>
-            <option value="Caveat">Caveat (Handwritten)</option>
-            <option value="Silkscreen">Silkscreen (8-Bit Pixel)</option>
-            <option value="Bangers">Bangers (Comic)</option>
-            <option value="Inter">Inter Bold</option>
-            <option value="JetBrains Mono">JetBrains Mono</option>
+            <optgroup label="Bold &amp; Impact">
+              <option value="Montserrat">Montserrat Black</option>
+              <option value="Anton">Anton (Condensed Impact)</option>
+              <option value="Bebas Neue">Bebas Neue (Tall Cinema)</option>
+              <option value="Oswald">Oswald (Editorial Bold)</option>
+              <option value="Syne">Syne (Wide Agency)</option>
+              <option value="Unbounded">Unbounded (Futuristic)</option>
+            </optgroup>
+            <optgroup label="Clean Modern">
+              <option value="Inter">Inter Bold</option>
+              <option value="Poppins">Poppins Bold</option>
+              <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+              <option value="DM Sans">DM Sans (Minimal)</option>
+              <option value="Space Grotesk">Space Grotesk (Tech)</option>
+            </optgroup>
+            <optgroup label="Editorial Serif">
+              <option value="Playfair Display">Playfair Display (Serif)</option>
+              <option value="Instrument Serif">Instrument Serif (Tall)</option>
+              <option value="Cinzel">Cinzel (Luxury Cinema)</option>
+            </optgroup>
+            <optgroup label="Handwritten &amp; Script">
+              <option value="Caveat">Caveat (Handwritten)</option>
+              <option value="Permanent Marker">Permanent Marker</option>
+              <option value="Pacifico">Pacifico (Brush Script)</option>
+            </optgroup>
+            <optgroup label="Display &amp; Mono">
+              <option value="Bangers">Bangers (Comic)</option>
+              <option value="Silkscreen">Silkscreen (8-Bit Pixel)</option>
+              <option value="JetBrains Mono">JetBrains Mono</option>
+            </optgroup>
           </select>
         </div>
 

@@ -414,6 +414,13 @@ export function useStudioController() {
     ) => {
       engineRef.current.setStyleParam(key, value);
       setStyleConfig((prev) => ({ ...prev, [key]: value }));
+
+      // Eagerly fetch selected Google Font so Canvas 2D paints it immediately
+      if (key === 'fontFamily' && typeof value === 'string' && document.fonts) {
+        const weight = engineRef.current.styleConfig.fontWeight || '700';
+        void document.fonts.load(`${weight} 48px "${value}"`);
+        void document.fonts.load(`italic ${weight} 48px "${value}"`);
+      }
     },
     []
   );
