@@ -125,3 +125,89 @@ export function RepeatIcon({ size = 15 }: { size?: number }) {
     </svg>
   );
 }
+
+export function TemplatesIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  );
+}
+
+export function StyleIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="4 7 4 4 20 4 20 7" />
+      <line x1="9" y1="20" x2="15" y2="20" />
+      <line x1="12" y1="4" x2="12" y2="20" />
+    </svg>
+  );
+}
+
+export function MotionIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" />
+      <path d="M5 19l1-2.5L8.5 15.5 6 14.5 5 12" />
+    </svg>
+  );
+}
+
+export function TranscriptIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2.5" />
+      <path d="M6 12h4M13 12h5M6 16h7M16 16h2" />
+    </svg>
+  );
+}
+
+export function SlidersIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="4" y1="21" x2="4" y2="14" />
+      <line x1="4" y1="10" x2="4" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12" y2="3" />
+      <line x1="20" y1="21" x2="20" y2="16" />
+      <line x1="20" y1="12" x2="20" y2="3" />
+      <line x1="2" y1="14" x2="6" y2="14" />
+      <line x1="10" y1="8" x2="14" y2="8" />
+      <line x1="18" y1="16" x2="22" y2="16" />
+    </svg>
+  );
+}
+
+export function MoveVerticalIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="8 18 12 22 16 18" />
+      <polyline points="8 6 12 2 16 6" />
+      <line x1="12" y1="2" x2="12" y2="22" />
+    </svg>
+  );
+}
+
+export function PaletteIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9z" />
+    </svg>
+  );
+}
+
+export function TuneOptionsIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="6" width="20" height="12" rx="6" />
+      <circle cx="16" cy="12" r="2.5" fill="currentColor" />
+    </svg>
+  );
+}

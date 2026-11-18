@@ -10,6 +10,12 @@ import type {
   TransitionPhase,
   TransitionScope,
 } from '../types/caption';
+import {
+  MotionIcon,
+  StyleIcon,
+  TemplatesIcon,
+  TranscriptIcon,
+} from './Icons';
 import { StylePanel } from './StylePanel';
 import { TemplatesPanel } from './TemplatesPanel';
 import { TranscriptPanel } from './TranscriptPanel';
@@ -67,28 +73,40 @@ export function Sidebar(props: SidebarProps) {
           className={`tab-btn${activeTab === 'templates' ? ' active' : ''}`}
           onClick={() => setActiveTab('templates')}
         >
-          Templates
+          <span className="tab-icon" aria-hidden="true">
+            <TemplatesIcon />
+          </span>
+          <span className="tab-label">Templates</span>
         </button>
         <button
           type="button"
           className={`tab-btn${activeTab === 'style' ? ' active' : ''}`}
           onClick={() => setActiveTab('style')}
         >
-          Style
+          <span className="tab-icon" aria-hidden="true">
+            <StyleIcon />
+          </span>
+          <span className="tab-label">Style</span>
         </button>
         <button
           type="button"
           className={`tab-btn${activeTab === 'motion' ? ' active' : ''}`}
           onClick={() => setActiveTab('motion')}
         >
-          Motion
+          <span className="tab-icon" aria-hidden="true">
+            <MotionIcon />
+          </span>
+          <span className="tab-label">Motion</span>
         </button>
         <button
           type="button"
           className={`tab-btn${activeTab === 'transcript' ? ' active' : ''}`}
           onClick={() => setActiveTab('transcript')}
         >
-          Text
+          <span className="tab-icon" aria-hidden="true">
+            <TranscriptIcon />
+          </span>
+          <span className="tab-label">Text</span>
           {props.wordCount > 0 && (
             <span className="tab-count-pill">{props.wordCount}</span>
           )}

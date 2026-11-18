@@ -170,12 +170,26 @@ export function TransitionsPanel({
     currentSet.hold !== 'template' && currentSet.hold !== 'none';
   const hasActiveOut = currentSet.out !== 'none';
 
-  const handleSelectInOut = (id: InOutTransitionId) => {
+  const handleSelectInOut = (id: InOutTransitionId, el?: HTMLButtonElement) => {
     onUpdateTransition(scope, phase, id);
+    if (el && window.matchMedia('(max-width: 860px)').matches) {
+      el.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest',
+      });
+    }
   };
 
-  const handleSelectHold = (id: HoldTransitionId) => {
+  const handleSelectHold = (id: HoldTransitionId, el?: HTMLButtonElement) => {
     onUpdateTransition(scope, 'hold', id);
+    if (el && window.matchMedia('(max-width: 860px)').matches) {
+      el.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest',
+      });
+    }
   };
 
   const phaseTitle = phase === 'in' ? 'In' : phase === 'hold' ? 'Hold' : 'Out';
@@ -319,50 +333,56 @@ export function TransitionsPanel({
         </button>
       </div>
 
-      {/* Transition Tiles Grid */}
-      {phase === 'hold' ? (
-        <div className="transition-group">
-          <span className="transition-group-label">Continuous Hold</span>
-          <div className="transitions-grid">
-            {HOLD_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                className={`transition-card${currentSet.hold === opt.id ? ' active' : ''}`}
-                onClick={() => handleSelectHold(opt.id)}
-              >
-                <AaPreviewGlyph previewClass={opt.previewClass} />
-                <span className="transition-card-label">{opt.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : (
-        IN_OUT_GROUPS.map((group) => {
-          const groupItems = IN_OUT_OPTIONS.filter((o) => o.group === group);
-          const selectedId = phase === 'in' ? currentSet.in : currentSet.out;
-          return (
-            <div key={group} className="transition-group">
-              <span className="transition-group-label">{group}</span>
-              <div className="transitions-grid">
-                {groupItems.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    className={`transition-card${selectedId === opt.id ? ' active' : ''}`}
-                    onClick={() => handleSelectInOut(opt.id)}
-                  >
-                    <AaPreviewGlyph previewClass={opt.previewClass} />
-                    <span className="transition-card-label">
-                      {phase === 'out' && opt.outLabel ? opt.outLabel : opt.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
+      {/* Transition Tiles Grid (Desktop 3-col grouped | Mobile single-row horizontal carousel) */}
+      <div className="transitions-scroll-track">
+        {phase === 'hold' ? (
+          <div className="transition-group">
+            <span className="transition-group-label">Continuous Hold</span>
+            <div className="transitions-grid">
+              {HOLD_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={`transition-card${currentSet.hold === opt.id ? ' active' : ''}`}
+                  onClick={(e) => handleSelectHold(opt.id, e.currentTarget)}
+                >
+                  <AaPreviewGlyph previewClass={opt.previewClass} />
+                  <span className="transition-card-label">{opt.label}</span>
+                </button>
+              ))}
             </div>
-          );
-        })
-      )}
+          </div>
+        ) : (
+          IN_OUT_GROUPS.map((group) => {
+            const groupItems = IN_OUT_OPTIONS.filter((o) => o.group === group);
+            const selectedId = phase === 'in' ? currentSet.in : currentSet.out;
+            return (
+              <div key={group} className="transition-group">
+                <span className="transition-group-label">{group}</span>
+                <div className="transitions-grid">
+                  {groupItems.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className={`transition-card${selectedId === opt.id ? ' active' : ''}`}
+                      onClick={(e) =>
+                        handleSelectInOut(opt.id, e.currentTarget)
+                      }
+                    >
+                      <AaPreviewGlyph previewClass={opt.previewClass} />
+                      <span className="transition-card-label">
+                        {phase === 'out' && opt.outLabel
+                          ? opt.outLabel
+                          : opt.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

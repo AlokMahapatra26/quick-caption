@@ -333,6 +333,20 @@ export function TemplatesPanel({
       ? TEMPLATE_CATALOG
       : TEMPLATE_CATALOG.filter((t) => t.category === category);
 
+  const handleCardSelect = (
+    key: PresetKey,
+    el: HTMLDivElement
+  ) => {
+    onSelectPreset(key);
+    if (window.matchMedia('(max-width: 860px)').matches) {
+      el.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest',
+      });
+    }
+  };
+
   return (
     <div className="tab-pane active">
       {/* Category Filter Pills */}
@@ -376,7 +390,7 @@ export function TemplatesPanel({
               <div
                 key={item.key}
                 className={`preset-card preset-card-behind${isActive ? ' active' : ''}`}
-                onClick={() => onSelectPreset(item.key)}
+                onClick={(e) => handleCardSelect(item.key, e.currentTarget)}
               >
                 <div className="preset-featured-badges">
                   <span className="badge-behind">BEHIND YOU</span>
@@ -402,7 +416,7 @@ export function TemplatesPanel({
               <div
                 key={item.key}
                 className={`preset-card${isActive ? ' active' : ''}`}
-                onClick={() => onSelectPreset(item.key)}
+                onClick={(e) => handleCardSelect(item.key, e.currentTarget)}
               >
                 <div className="preset-featured-badges">
                   <span className="badge-editorial">MAGAZINE</span>
@@ -421,7 +435,7 @@ export function TemplatesPanel({
               <div
                 key={item.key}
                 className={`preset-card${isActive ? ' active' : ''}`}
-                onClick={() => onSelectPreset(item.key)}
+                onClick={(e) => handleCardSelect(item.key, e.currentTarget)}
               >
                 <div className="preset-badge">{item.label}</div>
                 <div className="preset-swiss-preview">
@@ -437,7 +451,7 @@ export function TemplatesPanel({
               <div
                 key={item.key}
                 className={`preset-card${isActive ? ' active' : ''}`}
-                onClick={() => onSelectPreset(item.key)}
+                onClick={(e) => handleCardSelect(item.key, e.currentTarget)}
               >
                 <div className="preset-badge">{item.label}</div>
                 <div className="preset-aura-preview">
@@ -453,7 +467,7 @@ export function TemplatesPanel({
               <div
                 key={item.key}
                 className={`preset-card${isActive ? ' active' : ''}`}
-                onClick={() => onSelectPreset(item.key)}
+                onClick={(e) => handleCardSelect(item.key, e.currentTarget)}
               >
                 <div className="preset-badge">{item.label}</div>
                 <div className="preset-bigred-preview">
@@ -468,7 +482,7 @@ export function TemplatesPanel({
             <div
               key={item.key}
               className={`preset-card${isActive ? ' active' : ''}`}
-              onClick={() => onSelectPreset(item.key)}
+              onClick={(e) => handleCardSelect(item.key, e.currentTarget)}
             >
               <div className="preset-badge">{item.label}</div>
               <div

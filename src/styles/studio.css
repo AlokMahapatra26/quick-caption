@@ -510,6 +510,27 @@ input[type="range"]::-moz-range-thumb {
   border-bottom-color: var(--ink);
 }
 
+/* Hidden on desktop so big screen stays exact clean text-only Vercel tabs */
+.tab-icon {
+  display: none;
+}
+
+.desktop-style-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mobile-style-tray {
+  display: none;
+}
+
+.transitions-scroll-track {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .tab-count-pill {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -1904,108 +1925,459 @@ input:checked + .toggle-slider:before {
 }
 
 /* ==========================================================================
-   MOBILE & TABLET RESPONSIVE STYLES
+   MOBILE & TABLET NATIVE VIDEO-EDITOR LAYOUT (<= 860px ONLY)
+   Big live preview on top + compact horizontal tool trays + bottom icon dock
    ========================================================================== */
 
 @media (max-width: 860px) {
-  /* Allow natural scrolling on mobile */
   body {
-    height: auto;
-    min-height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
   }
 
   .app-layout {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
+    height: 100dvh;
+    max-height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
   }
 
-  /* Stack Stage and Controls Vertically */
+  .topbar {
+    height: 46px;
+    padding: 0 12px;
+    flex-shrink: 0;
+  }
+
+  /* Stack Big Preview (flex: 1) above Compact Bottom Editor Drawer */
   .workspace {
+    flex: 1;
+    min-height: 0;
     flex-direction: column;
-    height: auto;
-    overflow: visible;
+    overflow: hidden;
   }
 
-  /* Stage (Top Section) */
+  /* BIG VIDEO PREVIEW STAGE */
   .stage-container {
+    flex: 1;
+    min-height: 0;
     width: 100%;
-    min-height: auto;
-    padding: 20px 14px 16px;
-    overflow: visible;
+    padding: 8px 12px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
   }
 
   .viewport-wrapper {
+    flex: 1;
+    min-height: 0;
     width: 100%;
-    height: 420px;
-    max-height: 52vh;
+    height: auto;
+    max-height: none;
   }
 
   .player-container {
+    height: 100%;
     max-height: 100%;
+    max-width: 100%;
     aspect-ratio: 9 / 16;
   }
 
   .dropzone-frame {
     max-width: 100%;
-    padding: 24px 16px;
+    padding: 16px;
   }
 
   .dropzone-title {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 
   .dropzone-subtitle {
-    font-size: 12.5px;
-    max-width: 320px;
+    font-size: 12px;
+    max-width: 300px;
+    margin-bottom: 12px;
   }
 
   .dropzone-actions {
-    max-width: 100%;
+    max-width: 280px;
     width: 100%;
   }
 
-  /* Playback Bar */
+  /* Compact Playback Scrubber right under Big Preview */
   .playback-bar {
+    flex-shrink: 0;
     max-width: 100%;
-    height: 44px;
-    padding: 0 10px;
-    gap: 8px;
-    margin-top: 10px;
+    width: 100%;
+    height: 38px;
+    padding: 0 8px;
+    gap: 6px;
+    margin-top: 6px;
   }
 
   .time-display {
-    font-size: 10.5px;
-    min-width: 78px;
+    font-size: 10px;
+    min-width: 72px;
   }
 
-  /* Controls Sidebar (Bottom Section) */
+  /* BOTTOM EDITOR DRAWER (Tool Tray on top + Native Icon Dock at very bottom) */
   .sidebar {
+    flex-shrink: 0;
     width: 100%;
     border-left: none;
     border-top: 1px solid var(--hairline);
-    height: auto;
-    overflow: visible;
+    display: flex;
+    flex-direction: column-reverse;
+    background: var(--canvas);
+    overflow: hidden;
   }
 
+  /* NATIVE BOTTOM ICON DOCK (CapCut / Instagram Edits style) */
   .sidebar-tabs {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: var(--canvas);
-    height: 46px;
+    position: static;
+    height: auto;
+    border-bottom: none;
+    border-top: 1px solid var(--hairline);
+    background: #ffffff;
+    padding: 5px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+    flex-shrink: 0;
   }
 
   .tab-btn {
-    font-size: 13px;
-    padding: 0 12px;
+    flex-direction: column;
+    gap: 3px;
+    padding: 4px 4px;
+    border-bottom: none;
+    border-radius: 8px;
+    position: relative;
+    color: #71717a;
   }
 
+  .tab-btn.active {
+    color: #09090b;
+    background: #f4f4f5;
+    border-bottom-color: transparent;
+  }
+
+  .tab-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .tab-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+
+  .tab-count-pill {
+    position: absolute;
+    top: 2px;
+    right: calc(50% - 22px);
+    font-size: 8.5px;
+    padding: 0 4px;
+    line-height: 13px;
+    background: #09090b;
+    color: #ffffff;
+    border-color: #09090b;
+  }
+
+  /* ACTIVE TOOL TRAY (Consistent compact height so preview never jumps!) */
   .tab-pane {
-    padding: 16px 14px 48px;
-    overflow-y: visible;
+    padding: 10px 14px 10px;
+    overflow: hidden;
+    gap: 8px;
+    flex: none;
+  }
+
+  /* Hide desktop-only section meta row on mobile Templates to maximize preview height */
+  .tab-pane .section-header {
+    display: none;
+  }
+
+  /* --- 1. TEMPLATES: Horizontal Pills + Horizontal Swipeable Cards --- */
+  .filter-pills-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin: 0 -14px;
+    padding: 0 14px;
+    gap: 6px;
+  }
+
+  .filter-pills-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-pill {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .presets-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    gap: 8px;
+    margin: 0 -14px;
+    padding: 4px 14px 6px;
+  }
+
+  .presets-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .presets-grid .preset-card {
+    flex: 0 0 124px;
+    min-width: 124px;
+    min-height: 58px;
+    scroll-snap-align: start;
+  }
+
+  /* --- 2. STYLE: Horizontal Sub-Tool Icons + Focused Live Control Strip --- */
+  .desktop-style-layout {
+    display: none;
+  }
+
+  .mobile-style-tray {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .mobile-subtool-bar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin: 0 -14px;
+    padding: 2px 14px;
+    gap: 6px;
+  }
+
+  .mobile-subtool-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-subtool-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    border: 1px solid #e4e4e7;
+    background: #ffffff;
+    color: #52525b;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .mobile-subtool-btn.active {
+    background: #09090b;
+    color: #ffffff;
+    border-color: #09090b;
+  }
+
+  .mobile-subtool-content {
+    min-height: 58px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .mobile-h-scroll {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    margin: 0 -14px;
+    padding: 4px 14px;
+    gap: 8px;
+  }
+
+  .mobile-h-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-font-chip {
+    flex: 0 0 auto;
+    min-width: 78px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 7px 10px;
+    border-radius: var(--rounded-sm);
+    background: #0f0f11;
+    border: 1px solid #27272a;
+    color: #ffffff;
+    cursor: pointer;
+    scroll-snap-align: start;
+    transition: all 0.15s ease;
+  }
+
+  .mobile-font-chip.active {
+    border-color: #09090b;
+    outline: 2px solid #09090b;
+    outline-offset: 2px;
+    background: #18181b;
+  }
+
+  .mobile-font-aa {
+    font-size: 15px;
+    line-height: 1.1;
+  }
+
+  .mobile-font-name {
+    font-family: var(--font-sans);
+    font-size: 9.5px;
+    font-weight: 500;
+    color: #a1a1aa;
+    white-space: nowrap;
+  }
+
+  .mobile-compact-sliders {
+    padding: 4px 0;
+  }
+
+  .mobile-color-pill,
+  .mobile-toggle-pill {
+    flex: 0 0 auto;
+    min-width: 96px;
+    white-space: nowrap;
+  }
+
+  /* --- 3. MOTION: Compact Chevron + Single-Row Horizontal Aa Carousel --- */
+  .scope-segmented {
+    gap: 5px;
+  }
+
+  .scope-seg-btn {
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .chevron-stepper {
+    min-height: 44px;
+  }
+
+  .chevron-step {
+    padding: 6px 8px 6px;
+    gap: 2px;
+  }
+
+  .chevron-val {
+    font-size: 11px;
+  }
+
+  .transition-stage-header {
+    display: none;
+  }
+
+  .transitions-scroll-track {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    gap: 7px;
+    margin: 0 -14px;
+    padding: 3px 14px 6px;
+  }
+
+  .transitions-scroll-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .transition-group,
+  .transitions-grid {
+    display: contents;
+  }
+
+  .transition-group-label {
+    display: none;
+  }
+
+  .transition-card {
+    flex: 0 0 80px;
+    min-width: 80px;
+    padding: 8px 4px 7px;
+    gap: 4px;
+    scroll-snap-align: start;
+  }
+
+  /* --- 4. TEXT (TRANSCRIPT): Compact Top Bar + Horizontal Swipeable Segment Cards --- */
+  .transcript-header-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    margin-bottom: 0;
+  }
+
+  .transcript-header-actions .btn {
+    flex: 1;
+    height: 30px;
+    font-size: 11px;
+    padding: 0 8px;
+  }
+
+  .transcript-header-actions .mt-2 {
+    margin-top: 0;
+  }
+
+  .transcript-list {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    margin: 0 -14px;
+    padding: 2px 14px 6px;
+    gap: 8px;
+  }
+
+  .transcript-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .transcript-card {
+    flex: 0 0 205px;
+    min-width: 205px;
+    padding: 8px 9px;
+    scroll-snap-align: start;
+  }
+
+  .empty-transcript {
+    padding: 14px 10px;
+    width: 100%;
   }
 
   /* Modals */
@@ -2018,10 +2390,9 @@ input:checked + .toggle-slider:before {
 }
 
 @media (max-width: 480px) {
-  /* Ultra-Compact Phone Header */
   .topbar {
     padding: 0 10px;
-    height: 48px;
+    height: 44px;
   }
 
   .brand {
@@ -2043,41 +2414,19 @@ input:checked + .toggle-slider:before {
 
   .btn {
     padding: 0 8px;
-    height: 30px;
+    height: 28px;
     font-size: 11px;
     gap: 4px;
   }
 
-  .viewport-wrapper {
-    height: 360px;
-    max-height: 48vh;
-  }
-
-  .presets-grid {
-    gap: 6px;
-  }
-
-  .preset-card {
+  .presets-grid .preset-card {
+    flex: 0 0 116px;
+    min-width: 116px;
     padding: 6px 8px;
-    min-height: 48px;
+    min-height: 54px;
   }
 
   .preset-sample {
     font-size: 12px;
-  }
-
-  .color-chips-grid,
-  .toggles-grid {
-    gap: 6px;
-  }
-
-  .color-chip,
-  .toggle-card {
-    padding: 6px 8px;
-  }
-
-  .color-chip-label,
-  .toggle-text {
-    font-size: 10.5px;
   }
 }
