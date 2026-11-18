@@ -3,6 +3,11 @@ import { extract16kHzMonoAudio } from '../core/audioExtractor';
 import { generateSyntheticDemoVideo } from '../core/demoVideo';
 import { VideoExporter } from '../core/exporter';
 import {
+  DEMO_HINGLISH_WORDS,
+  hasDevanagari,
+  toNaturalHinglish,
+} from '../core/hinglish';
+import {
   PersonSegmenter,
   type SegmenterStatus,
 } from '../core/personSegmenter';
@@ -11,9 +16,11 @@ import { SilenceDetector } from '../core/silenceDetector';
 import { SubtitleEngine } from '../core/subtitleEngine';
 import { createDefaultTransitionConfig } from '../core/transitions';
 import type {
+  CaptionLanguage,
   ExportResult,
   HoldTransitionId,
   InOutTransitionId,
+  MultilingualModelSize,
   PresetKey,
   RawWord,
   SubtitleSegment,
@@ -51,6 +58,7 @@ export function useStudioController() {
   const workerRef = useRef<Worker | null>(null);
 
   const currentFileRef = useRef<File | null>(null);
+  const nativeWordsRef = useRef<RawWord[] | null>(null);
   const videoUrlRef = useRef<string | null>(null);
   const exportUrlRef = useRef<string | null>(null);
   const rafIdRef = useRef<number | null>(null);
@@ -81,6 +89,12 @@ export function useStudioController() {
   const [wordCount, setWordCount] = useState(0);
   const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
   const [activeWordId, setActiveWordId] = useState<string | null>(null);
+  const [captionLanguage, setCaptionLanguage] =
+    useState<CaptionLanguage>('hinglish');
+  const [multilingualModelSize, setMultilingualModelSize] =
+    useState<MultilingualModelSize>('base');
+  const captionLanguageRef = useRef<CaptionLanguage>('hinglish');
+  const multilingualModelSizeRef = useRef<MultilingualModelSize>('base');
 
   const [silenceEnabled, setSilenceEnabled] = useState(false);
   const [silenceThreshold, setSilenceThreshold] = useState(0.4);
@@ -134,7 +148,12 @@ export function useStudioController() {
 
   const loadSampleCaptions = useCallback(() => {
     setLoader((prev) => ({ ...prev, visible: false }));
-    applyWords(DEMO_SAMPLE_WORDS);
+    nativeWordsRef.current = null;
+    const sample =
+      captionLanguageRef.current === 'english'
+        ? DEMO_SAMPLE_WORDS
+        : DEMO_HINGLISH_WORDS;
+    applyWords(sample);
   }, [applyWords]);
 
   const startRenderLoop = useCallback(() => {
@@ -208,6 +227,7 @@ export function useStudioController() {
           setLoader((prev) => ({ ...prev, progress: data.percent }));
         } else if (data.type === 'TRANSCRIBE_SUCCESS') {
           setLoader((prev) => ({ ...prev, visible: false, progress: 100 }));
+          nativeWordsRef.current = data.nativeWords ?? null;
           applyWords(data.words);
         }
       };
@@ -251,7 +271,12 @@ export function useStudioController() {
       if (workerRef.current) {
         // Zero-copy transfer of the Float32Array buffer to the Web Worker
         workerRef.current.postMessage(
-          { type: 'TRANSCRIBE', audioData: audioResult.audioData },
+          {
+            type: 'TRANSCRIBE',
+            audioData: audioResult.audioData,
+            language: captionLanguageRef.current,
+            modelSize: multilingualModelSizeRef.current,
+          },
           [audioResult.audioData.buffer]
         );
       } else {
@@ -446,6 +471,38 @@ export function useStudioController() {
     engineRef.current.updateWordText(wordId, text);
   }, []);
 
+  const handleChangeCaptionLanguage = useCallback(
+    (nextLang: CaptionLanguage) => {
+      captionLanguageRef.current = nextLang;
+      setCaptionLanguage(nextLang);
+
+      // Instantly switch script (Devanagari <-> Hinglish) if we already have Hindi transcription
+      const nativeWords = nativeWordsRef.current;
+      if (
+        nativeWords &&
+        nativeWords.length > 0 &&
+        nativeWords.some((w) => hasDevanagari(w.word))
+      ) {
+        if (nextLang === 'hinglish') {
+          applyWords(
+            nativeWords.map((w) => ({ ...w, word: toNaturalHinglish(w.word) }))
+          );
+        } else if (nextLang === 'hindi') {
+          applyWords(nativeWords.map((w) => ({ ...w })));
+        }
+      }
+    },
+    [applyWords]
+  );
+
+  const handleChangeMultilingualModelSize = useCallback(
+    (nextSize: MultilingualModelSize) => {
+      multilingualModelSizeRef.current = nextSize;
+      setMultilingualModelSize(nextSize);
+    },
+    []
+  );
+
   const previewTransition = useCallback(
     (phase: TransitionPhase = 'in', scope: TransitionScope = 'all') => {
       const video = videoRef.current;
@@ -620,6 +677,10 @@ export function useStudioController() {
     wordCount,
     activeSegmentId,
     activeWordId,
+    captionLanguage,
+    multilingualModelSize,
+    handleChangeCaptionLanguage,
+    handleChangeMultilingualModelSize,
     runSpeechRecognition,
     loadSampleCaptions,
     updateWordText,

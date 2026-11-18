@@ -1,21 +1,26 @@
+import type { MultilingualModelSize } from '../types/caption';
 import { SettingsIcon } from './Icons';
 
 interface SettingsModalProps {
   open: boolean;
   silenceEnabled: boolean;
   silenceThreshold: number;
+  multilingualModelSize: MultilingualModelSize;
   onClose: () => void;
   onToggleSilence: (enabled: boolean) => void;
   onChangeSilenceThreshold: (threshold: number) => void;
+  onChangeMultilingualModelSize: (size: MultilingualModelSize) => void;
 }
 
 export function SettingsModal({
   open,
   silenceEnabled,
   silenceThreshold,
+  multilingualModelSize,
   onClose,
   onToggleSilence,
   onChangeSilenceThreshold,
+  onChangeMultilingualModelSize,
 }: SettingsModalProps) {
   if (!open) return null;
 
@@ -80,15 +85,27 @@ export function SettingsModal({
           </div>
 
           <div className="settings-group mt-3">
-            <div className="mono-eyebrow mb-2">CLIENT-SIDE PERFORMANCE</div>
+            <div className="mono-eyebrow mb-2">SPEECH &amp; PERFORMANCE</div>
             <div className="settings-row">
               <div className="settings-row-info">
-                <strong>Whisper AI Engine</strong>
+                <strong>Hinglish / Hindi Model</strong>
                 <p className="settings-row-desc">
-                  Transformers.js (Quantized int8 • 39MB)
+                  Cached locally after first download (English always uses 39MB
+                  tiny.en)
                 </p>
               </div>
-              <span className="badge-pill">WebGPU / WASM</span>
+              <select
+                className="control-select"
+                value={multilingualModelSize}
+                onChange={(e) =>
+                  onChangeMultilingualModelSize(
+                    e.target.value as MultilingualModelSize
+                  )
+                }
+              >
+                <option value="base">Whisper Base (~75MB • Fast)</option>
+                <option value="small">Whisper Small (~190MB • Best)</option>
+              </select>
             </div>
             <div className="settings-row">
               <div className="settings-row-info">

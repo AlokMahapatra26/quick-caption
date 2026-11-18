@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import type { SegmenterStatus } from '../core/personSegmenter';
 import type {
+  CaptionLanguage,
   HoldTransitionId,
   InOutTransitionId,
+  MultilingualModelSize,
   PresetKey,
   SubtitleSegment,
   SubtitleStyleConfig,
@@ -38,6 +40,9 @@ interface SidebarProps {
   segments: SubtitleSegment[];
   activeSegmentId: string | null;
   activeWordId: string | null;
+  captionLanguage: CaptionLanguage;
+  multilingualModelSize: MultilingualModelSize;
+  onChangeLanguage: (lang: CaptionLanguage) => void;
   onSelectPreset: (preset: PresetKey) => void;
   onUpdateStyle: <K extends keyof SubtitleStyleConfig>(
     key: K,
@@ -154,6 +159,9 @@ export function Sidebar(props: SidebarProps) {
           segments={props.segments}
           activeSegmentId={props.activeSegmentId}
           activeWordId={props.activeWordId}
+          captionLanguage={props.captionLanguage}
+          multilingualModelSize={props.multilingualModelSize}
+          onChangeLanguage={props.onChangeLanguage}
           onRunWhisper={props.onRunWhisper}
           onLoadSample={props.onLoadSample}
           onSeek={props.onSeek}

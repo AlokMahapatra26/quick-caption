@@ -442,6 +442,20 @@ export const EMOJI_MAP: Record<string, string> = {
   business: '👔',
   code: '💻',
   tech: '🤖',
+  // Hinglish keyword triggers
+  paisa: '💸',
+  paise: '💸',
+  ruko: '🛑',
+  aag: '🔥',
+  dimaag: '🧠',
+  bhai: '🤝',
+  dost: '🤝',
+  doston: '🤝',
+  dil: '❤️',
+  jeeto: '🏆',
+  kaam: '💼',
+  minute: '⏱️',
+  ready: '⚡',
 };
 
 export const DEMO_SAMPLE_WORDS: RawWord[] = [

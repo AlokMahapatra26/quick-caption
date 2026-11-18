@@ -97,6 +97,9 @@ export function App() {
           segments={studio.segments}
           activeSegmentId={studio.activeSegmentId}
           activeWordId={studio.activeWordId}
+          captionLanguage={studio.captionLanguage}
+          multilingualModelSize={studio.multilingualModelSize}
+          onChangeLanguage={studio.handleChangeCaptionLanguage}
           onSelectPreset={studio.applyPreset}
           onUpdateStyle={studio.updateStyleParam}
           onToggleUppercase={studio.toggleUppercase}
@@ -118,9 +121,11 @@ export function App() {
         open={settingsOpen}
         silenceEnabled={studio.silenceEnabled}
         silenceThreshold={studio.silenceThreshold}
+        multilingualModelSize={studio.multilingualModelSize}
         onClose={() => setSettingsOpen(false)}
         onToggleSilence={studio.handleToggleSilence}
         onChangeSilenceThreshold={studio.handleChangeSilenceThreshold}
+        onChangeMultilingualModelSize={studio.handleChangeMultilingualModelSize}
       />
     </div>
   );

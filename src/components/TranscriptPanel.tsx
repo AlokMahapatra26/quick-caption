@@ -1,5 +1,9 @@
 import { memo } from 'react';
-import type { SubtitleSegment } from '../types/caption';
+import type {
+  CaptionLanguage,
+  MultilingualModelSize,
+  SubtitleSegment,
+} from '../types/caption';
 import { formatTime } from '../utils/formatTime';
 import { MicIcon } from './Icons';
 
@@ -60,23 +64,56 @@ interface TranscriptPanelProps {
   segments: SubtitleSegment[];
   activeSegmentId: string | null;
   activeWordId: string | null;
+  captionLanguage: CaptionLanguage;
+  multilingualModelSize: MultilingualModelSize;
+  onChangeLanguage: (lang: CaptionLanguage) => void;
   onRunWhisper: () => void;
   onLoadSample: () => void;
   onSeek: (time: number) => void;
   onWordChange: (wordId: string, text: string) => void;
 }
 
+const LANGUAGE_OPTIONS: { id: CaptionLanguage; label: string }[] = [
+  { id: 'hinglish', label: 'Hinglish' },
+  { id: 'english', label: 'English' },
+  { id: 'hindi', label: 'Hindi' },
+];
+
 export function TranscriptPanel({
   segments,
   activeSegmentId,
   activeWordId,
+  captionLanguage,
+  multilingualModelSize,
+  onChangeLanguage,
   onRunWhisper,
   onLoadSample,
   onSeek,
   onWordChange,
 }: TranscriptPanelProps) {
+  const modelSizeHint =
+    captionLanguage === 'english'
+      ? '39MB'
+      : multilingualModelSize === 'small'
+        ? '190MB'
+        : '75MB';
+
   return (
     <div className="tab-pane active">
+      {/* Speech Language Switcher: Hinglish | English | Hindi */}
+      <div className="lang-segmented" role="group" aria-label="Caption Language">
+        {LANGUAGE_OPTIONS.map((opt) => (
+          <button
+            key={opt.id}
+            type="button"
+            className={`lang-seg-btn${captionLanguage === opt.id ? ' active' : ''}`}
+            onClick={() => onChangeLanguage(opt.id)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       <div className="transcript-header-actions">
         <button
           type="button"
@@ -84,14 +121,14 @@ export function TranscriptPanel({
           onClick={onRunWhisper}
         >
           <MicIcon />
-          Transcribe with Whisper AI
+          Transcribe ({modelSizeHint})
         </button>
         <button
           type="button"
           className="btn btn-secondary btn-full mt-2"
           onClick={onLoadSample}
         >
-          Load Sample Captions
+          Load Sample
         </button>
       </div>
 

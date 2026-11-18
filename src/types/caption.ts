@@ -27,6 +27,9 @@ export type PresetKey =
 export type AnimationType = 'bounce' | 'glow' | 'none';
 export type TextTransform = 'uppercase' | 'none' | 'capitalize';
 
+export type CaptionLanguage = 'hinglish' | 'english' | 'hindi';
+export type MultilingualModelSize = 'base' | 'small';
+
 export type TransitionScope = 'all' | 'emphasized';
 export type TransitionPhase = 'in' | 'hold' | 'out';
 
@@ -166,10 +169,17 @@ export interface ExportResult {
 export type WorkerInMessage = {
   type: 'TRANSCRIBE';
   audioData?: Float32Array;
+  language?: CaptionLanguage;
+  modelSize?: MultilingualModelSize;
   fallback?: boolean;
 };
 
 export type WorkerOutMessage =
   | { type: 'STATUS'; message: string }
   | { type: 'PROGRESS'; percent: number }
-  | { type: 'TRANSCRIBE_SUCCESS'; words: RawWord[]; warning?: string };
+  | {
+      type: 'TRANSCRIBE_SUCCESS';
+      words: RawWord[];
+      nativeWords?: RawWord[];
+      warning?: string;
+    };
