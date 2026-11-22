@@ -50,6 +50,12 @@ export interface ExportModalState {
 }
 
 function getInitialLanguage(): CaptionLanguage {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('autocaption_caption_lang') as CaptionLanguage;
+    if (saved === 'hinglish' || saved === 'hindi' || saved === 'english') {
+      return saved;
+    }
+  }
   return 'english';
 }
 
@@ -311,6 +317,7 @@ export function useStudioController() {
 
           const words = await transcribeWithGroq(audioResult.audioData, {
             apiKey: key,
+            language: 'hinglish',
             onStatus: (msg) =>
               setLoader((prev) => ({ ...prev, text: msg, progress: 75 })),
           });

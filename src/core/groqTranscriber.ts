@@ -57,6 +57,7 @@ function writeString(view: DataView, offset: number, str: string) {
 
 export interface GroqTranscribeOptions {
   apiKey: string;
+  language?: 'english' | 'hinglish';
   prompt?: string;
   onStatus?: (message: string) => void;
 }
@@ -91,7 +92,7 @@ export async function transcribeWithGroq(
   audioData: Float32Array,
   options: GroqTranscribeOptions
 ): Promise<RawWord[]> {
-  const { apiKey, prompt, onStatus } = options;
+  const { apiKey, language = 'hinglish', prompt, onStatus } = options;
   const cleanKey = apiKey ? apiKey.trim() : '';
   if (!cleanKey) {
     throw new Error(
@@ -104,16 +105,23 @@ export async function transcribeWithGroq(
 
   const formData = new FormData();
   formData.append('file', wavBlob, 'audio.wav');
-  formData.append('model', 'whisper-large-v3-turbo');
+  // Use the full 1.55B foundation model for deep Hindi & Indian dialect comprehension
+  formData.append('model', 'whisper-large-v3');
   formData.append('response_format', 'verbose_json');
   formData.append('timestamp_granularities[]', 'word');
 
-  // Condition Whisper Large to prefer Latin/Roman script for Hinglish code-switching
-  const defaultHinglishPrompt =
-    'Hinglish conversation in Roman / Latin script: namaste doston, subscribe, evolution, video, like, share, technology, follow, creators.';
-  formData.append('prompt', prompt || defaultHinglishPrompt);
+  if (language === 'hinglish') {
+    // Condition Whisper acoustic encoder on Hindi phonemes to prevent English phonetic hallucinations
+    formData.append('language', 'hi');
+    const defaultHinglishPrompt =
+      'Hinglish conversation in Roman / Latin script: namaste doston, talash, subscribe, video, like, share, follow, creators, kya, kaise, kyun.';
+    formData.append('prompt', prompt || defaultHinglishPrompt);
+  } else {
+    formData.append('language', 'en');
+    formData.append('prompt', prompt || 'English speech with clear punctuation and grammar.');
+  }
 
-  onStatus?.('Transcribing Hinglish with Groq Whisper Large v3...');
+  onStatus?.('Transcribing speech with Groq Whisper Large v3...');
   const response = await fetch(
     'https://api.groq.com/openai/v1/audio/transcriptions',
     {

@@ -83,10 +83,17 @@ autocaption/
 │   ├── hooks/               # useStudioController orchestration hook
 │   ├── styles/              # studio.css with responsive mobile dock
 │   └── types/               # TypeScript interfaces & data contracts
+├── CHANGELOG.md             # Curated release notes and version history
 ├── research.md              # In-depth research on models, WebGPU, and cloud economics
 ├── SPEC.md                  # Spec-Driven Development architectural specifications
 └── DESIGN.md                # Design language and typography guidelines
 ```
+
+---
+
+## 📜 Changelog
+
+Detailed release notes and historical changes across versions are maintained in [CHANGELOG.md](file:///home/alok/All%20projects/Personal%20Project/autocaption/CHANGELOG.md).
 
 ---
 

@@ -245,6 +245,9 @@ const HINGLISH_DICT: Record<string, string> = {
   'प्रॉफिट': 'profit',
 
   // High-frequency spoken Hindi words (natural Hinglish spelling)
+  'तलाश': 'talash',
+  'तलाशती': 'talaashti',
+  'تلاش': 'talash',
   'मैं': 'main',
   'मैंने': 'maine',
   'मेरा': 'mera',

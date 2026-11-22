@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { DragEvent, RefObject } from 'react';
 import type { LoaderState } from '../hooks/useStudioController';
 import { formatTime } from '../utils/formatTime';
@@ -10,6 +10,8 @@ import {
   UploadIcon,
   VolumeOffIcon,
   VolumeOnIcon,
+  ReplaceIcon,
+  FullscreenIcon,
 } from './Icons';
 
 interface VideoStageProps {
@@ -58,6 +60,21 @@ export function VideoStage({
   onToggleLoop,
 }: VideoStageProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const monitorRef = useRef<HTMLDivElement>(null);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      monitorRef.current?.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  };
+
+  const video = videoRef.current;
+  const videoWidth = video?.videoWidth || 0;
+  const videoHeight = video?.videoHeight || 0;
+  const videoResolution =
+    videoWidth && videoHeight ? `${videoWidth}×${videoHeight}` : null;
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -87,10 +104,9 @@ export function VideoStage({
 
   return (
     <main className="stage-container">
-      <div className="ambient-mesh-glow" />
-
-      <div className="viewport-wrapper">
-        {!hasVideo && (
+      {/* 1. DROPZONE FRAME (Shown before video is uploaded) */}
+      {!hasVideo && (
+        <div className="viewport-wrapper">
           <div
             className={`dropzone-frame${isDragging ? ' dragover' : ''}`}
             onDragEnter={handleDragOver}
@@ -135,11 +151,44 @@ export function VideoStage({
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Always mounted so refs stay attached before metadata loads */}
-        <div className={`player-container${hasVideo ? '' : ' hidden'}`}>
+      {/* 2. UNIFIED STUDIO MONITOR (Mounted always to preserve video & canvas refs) */}
+      <div
+        className={`studio-monitor-frame${hasVideo ? '' : ' hidden'}`}
+        ref={monitorRef}
+      >
+        {/* TOP BAR DOCKED TO VIDEO */}
+        <div className="kz-stage-topbar">
+          <div className="kz-topbar-left">
+            <button
+              type="button"
+              className="kz-dock-btn"
+              onClick={onBrowseClick}
+              title="Replace Video"
+            >
+              <ReplaceIcon size={12} />
+              <span>Replace</span>
+            </button>
+          </div>
+
+          <div className="kz-topbar-right">
+            {/* Resolution Indicator Pill */}
+            <div
+              className="kz-dock-btn res-indicator"
+              title={videoResolution ? `${videoResolution} (9:16)` : 'Resolution'}
+            >
+              <span className="kz-res-dot" />
+              <span>{videoResolution ? `${videoResolution}` : '9:16'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* MAIN VIDEO CANVAS VIEWPORT */}
+        <div className="kz-viewport">
           <canvas ref={canvasRef} id="preview-canvas" />
+
           <video
             ref={videoRef}
             id="source-video"
@@ -163,51 +212,65 @@ export function VideoStage({
             </div>
           </div>
         </div>
-      </div>
 
-      <div className={`playback-bar${hasVideo ? '' : ' hidden'}`}>
-        <button
-          type="button"
-          className="btn-icon"
-          title="Play/Pause (Space)"
-          onClick={onTogglePlay}
-        >
-          {isPlaying ? <PauseIcon /> : <PlayIcon />}
-        </button>
+        {/* PLAYBACK BAR DOCKED TO VIDEO */}
+        <div className="kz-playback-bar">
+          <div className="kz-play-left">
+            <button
+              type="button"
+              className="kz-ctrl-btn"
+              title="Play/Pause (Space)"
+              onClick={onTogglePlay}
+            >
+              {isPlaying ? <PauseIcon size={14} /> : <PlayIcon size={14} />}
+            </button>
 
-        <span className="time-display">
-          {formatTime(currentTime)} / {formatTime(duration)}
-        </span>
+            <button
+              type="button"
+              className="kz-ctrl-btn"
+              title="Mute/Unmute"
+              onClick={onToggleMute}
+            >
+              {isMuted ? <VolumeOffIcon size={14} /> : <VolumeOnIcon size={14} />}
+            </button>
 
-        <div className="scrubber-wrapper">
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={0.05}
-            value={scrubberPercent}
-            onChange={(e) => onSeekPercent(Number(e.target.value))}
-          />
+            <span className="kz-timecode">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </span>
+          </div>
+
+          <div className="kz-play-scrubber">
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={0.05}
+              value={scrubberPercent}
+              onChange={(e) => onSeekPercent(Number(e.target.value))}
+            />
+          </div>
+
+          <div className="kz-play-right">
+            <button
+              type="button"
+              className={`kz-ctrl-btn${isLooping ? ' active' : ''}`}
+              title={isLooping ? 'Loop: On' : 'Loop: Off'}
+              aria-pressed={isLooping}
+              onClick={onToggleLoop}
+            >
+              <RepeatIcon size={13} />
+            </button>
+
+            <button
+              type="button"
+              className="kz-ctrl-btn"
+              title="Fullscreen"
+              onClick={toggleFullscreen}
+            >
+              <FullscreenIcon size={14} />
+            </button>
+          </div>
         </div>
-
-        <button
-          type="button"
-          className={`btn-icon${isLooping ? ' active' : ''}`}
-          title={isLooping ? 'Loop: On' : 'Loop: Off'}
-          aria-pressed={isLooping}
-          onClick={onToggleLoop}
-        >
-          <RepeatIcon />
-        </button>
-
-        <button
-          type="button"
-          className="btn-icon"
-          title="Mute/Unmute"
-          onClick={onToggleMute}
-        >
-          {isMuted ? <VolumeOffIcon /> : <VolumeOnIcon />}
-        </button>
       </div>
     </main>
   );

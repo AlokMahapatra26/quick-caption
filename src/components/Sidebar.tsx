@@ -1,17 +1,5 @@
 import { useState } from 'react';
-import type { SegmenterStatus } from '../core/personSegmenter';
-import type {
-  CaptionLanguage,
-  HoldTransitionId,
-  InOutTransitionId,
-  MultilingualModelSize,
-  PresetKey,
-  SubtitleSegment,
-  SubtitleStyleConfig,
-  TransitionConfig,
-  TransitionPhase,
-  TransitionScope,
-} from '../types/caption';
+import { useStudio } from '../context/StudioContext';
 import {
   MotionIcon,
   StyleIcon,
@@ -25,50 +13,9 @@ import { TransitionsPanel } from './TransitionsPanel';
 
 type SidebarTab = 'templates' | 'style' | 'motion' | 'transcript';
 
-interface SidebarProps {
-  hasVideo: boolean;
-  wordCount: number;
-  activePreset: PresetKey;
-  styleConfig: SubtitleStyleConfig;
-  useUppercase: boolean;
-  useEmojis: boolean;
-  transitionConfig: TransitionConfig;
-  segmenterStatus: SegmenterStatus;
-  silenceEnabled: boolean;
-  silenceThreshold: number;
-  jumpcutStats: string;
-  segments: SubtitleSegment[];
-  activeSegmentId: string | null;
-  activeWordId: string | null;
-  captionLanguage: CaptionLanguage;
-  multilingualModelSize: MultilingualModelSize;
-  onChangeLanguage: (lang: CaptionLanguage) => void;
-  onSelectPreset: (preset: PresetKey) => void;
-  onUpdateStyle: <K extends keyof SubtitleStyleConfig>(
-    key: K,
-    value: SubtitleStyleConfig[K]
-  ) => void;
-  onToggleUppercase: (checked: boolean) => void;
-  onToggleEmojis: (checked: boolean) => void;
-  onUpdateTransition: (
-    scope: TransitionScope,
-    phase: TransitionPhase,
-    value: InOutTransitionId | HoldTransitionId
-  ) => void;
-  onPreviewTransition: (
-    phase: TransitionPhase,
-    scope: TransitionScope
-  ) => void;
-  onToggleSilence: (enabled: boolean) => void;
-  onChangeSilenceThreshold: (threshold: number) => void;
-  onRunWhisper: () => void;
-  onLoadSample: () => void;
-  onSeek: (time: number) => void;
-  onWordChange: (wordId: string, text: string) => void;
-}
-
-export function Sidebar(props: SidebarProps) {
+export function Sidebar() {
   const [activeTab, setActiveTab] = useState<SidebarTab>('templates');
+  const studio = useStudio();
 
   return (
     <aside className="sidebar">
@@ -111,62 +58,63 @@ export function Sidebar(props: SidebarProps) {
           <span className="tab-icon" aria-hidden="true">
             <TranscriptIcon />
           </span>
-          <span className="tab-label">Text</span>
-          {props.wordCount > 0 && (
-            <span className="tab-count-pill">{props.wordCount}</span>
+          <span className="tab-label">Transcript</span>
+          {studio.wordCount > 0 && (
+            <span className="tab-badge">{studio.wordCount}</span>
           )}
         </button>
       </div>
 
       {activeTab === 'templates' && (
         <TemplatesPanel
-          activePreset={props.activePreset}
-          segmenterStatus={props.segmenterStatus}
-          onSelectPreset={props.onSelectPreset}
+          activePreset={studio.activePreset}
+          segmenterStatus={studio.segmenterStatus}
+          onSelectPreset={studio.applyPreset}
           onCustomizeClick={() => setActiveTab('style')}
         />
       )}
 
       {activeTab === 'style' && (
         <StylePanel
-          activePreset={props.activePreset}
-          styleConfig={props.styleConfig}
-          useUppercase={props.useUppercase}
-          useEmojis={props.useEmojis}
-          silenceEnabled={props.silenceEnabled}
-          silenceThreshold={props.silenceThreshold}
-          jumpcutStats={props.jumpcutStats}
+          activePreset={studio.activePreset}
+          styleConfig={studio.styleConfig}
+          useUppercase={studio.useUppercase}
+          useEmojis={studio.useEmojis}
+          silenceEnabled={studio.silenceEnabled}
+          silenceThreshold={studio.silenceThreshold}
+          jumpcutStats={studio.jumpcutStats}
           onChangeTemplateClick={() => setActiveTab('templates')}
-          onUpdateStyle={props.onUpdateStyle}
-          onToggleUppercase={props.onToggleUppercase}
-          onToggleEmojis={props.onToggleEmojis}
-          onToggleSilence={props.onToggleSilence}
-          onChangeSilenceThreshold={props.onChangeSilenceThreshold}
+          onUpdateStyle={studio.updateStyleParam}
+          onToggleUppercase={studio.toggleUppercase}
+          onToggleEmojis={studio.toggleEmojis}
+          onToggleSilence={studio.handleToggleSilence}
+          onChangeSilenceThreshold={studio.handleChangeSilenceThreshold}
         />
       )}
 
       {activeTab === 'motion' && (
         <TransitionsPanel
-          hasVideo={props.hasVideo}
-          config={props.transitionConfig}
-          onUpdateTransition={props.onUpdateTransition}
-          onPreview={props.onPreviewTransition}
+          hasVideo={studio.hasVideo}
+          config={studio.transitionConfig}
+          onUpdateTransition={studio.updateTransition}
+          onPreview={studio.previewTransition}
         />
       )}
 
       {activeTab === 'transcript' && (
         <TranscriptPanel
-          segments={props.segments}
-          activeSegmentId={props.activeSegmentId}
-          activeWordId={props.activeWordId}
-          captionLanguage={props.captionLanguage}
-          onChangeLanguage={props.onChangeLanguage}
-          onRunWhisper={props.onRunWhisper}
-          onLoadSample={props.onLoadSample}
-          onSeek={props.onSeek}
-          onWordChange={props.onWordChange}
+          segments={studio.segments}
+          activeSegmentId={studio.activeSegmentId}
+          activeWordId={studio.activeWordId}
+          captionLanguage={studio.captionLanguage}
+          onChangeLanguage={studio.handleChangeCaptionLanguage}
+          onRunWhisper={() => void studio.runSpeechRecognition()}
+          onLoadSample={studio.loadSampleCaptions}
+          onSeek={studio.seekToTime}
+          onWordChange={studio.updateWordText}
         />
       )}
     </aside>
   );
 }
+export default Sidebar;
