@@ -5,7 +5,7 @@ import type { RawWord } from '../types/caption';
  * English loanwords that Whisper outputs in Devanagari script.
  */
 const HINGLISH_DICT: Record<string, string> = {
-  // Common English loanwords in Reels / Shorts
+  // Common English loanwords in Reels / Shorts / Creator Content
   'वीडियो': 'video',
   'वीडियोज़': 'videos',
   'अपलोड': 'upload',
@@ -42,12 +42,18 @@ const HINGLISH_DICT: Record<string, string> = {
   'ग्रो': 'grow',
   'कंटेंट': 'content',
   'क्रिएटर': 'creator',
+  'क्रिएटर्स': 'creators',
   'फॉलो': 'follow',
   'फ़ॉलो': 'follow',
+  'फॉलोअर्स': 'followers',
   'लाइक': 'like',
   'शेयर': 'share',
   'कमेंट': 'comment',
+  'कमेंट्स': 'comments',
   'सब्सक्राइब': 'subscribe',
+  'सब्सक्राइबर': 'subscriber',
+  'सब्सक्राइबर्स': 'subscribers',
+  'चैनल': 'channel',
   'लिंक': 'link',
   'बायो': 'bio',
   'ब्रांड': 'brand',
@@ -56,8 +62,13 @@ const HINGLISH_DICT: Record<string, string> = {
   'क्लाइंट': 'client',
   'पॉडकास्ट': 'podcast',
   'कैमरा': 'camera',
+  'माइक': 'mic',
+  'लैपटॉप': 'laptop',
+  'स्क्रीन': 'screen',
   'ऑडियो': 'audio',
   'साउंड': 'sound',
+  'म्यूजिक': 'music',
+  'म्यूज़िक': 'music',
   'स्टाइल': 'style',
   'फॉन्ट': 'font',
   'फ़ॉन्ट': 'font',
@@ -65,10 +76,166 @@ const HINGLISH_DICT: Record<string, string> = {
   'क्वालिटी': 'quality',
   'प्रॉब्लम': 'problem',
   'सॉल्यूशन': 'solution',
+  'سولیوشن': 'solution',
+  'इवोल्यूशन': 'evolution',
+  'ایولیوشن': 'evolution',
+  'रेवोल्यूशन': 'revolution',
+  'क्रिएशन': 'creation',
+  'मोटिवेशन': 'motivation',
+  'जनरेशन': 'generation',
+  'एक्शन': 'action',
+  'ऑप्शन': 'option',
+  'ऑप्शंस': 'options',
+  'कलेक्शन': 'collection',
+  'सेलेक्शन': 'selection',
+  'इंस्पिरेशन': 'inspiration',
+  'कंडीशन': 'condition',
+  'पॉजिशन': 'position',
+  'पोजीशन': 'position',
+  'डायरेक्शन': 'direction',
+  'अट्रैक्शन': 'attraction',
+  'रिएक्शन': 'reaction',
+  'इमोशन': 'emotion',
+  'इमोशंस': 'emotions',
+  'प्रमोशन': 'promotion',
+  'नोटिफिकेशन': 'notification',
+  'नोटिफिकेशन्स': 'notifications',
+  'कम्युनिकेशन': 'communication',
+  'एजुकेशन': 'education',
+  'एप्लीकेशन': 'application',
+  'ऐप्लिकेशन': 'application',
+  'ऑटोमेशन': 'automation',
+  'ट्रांसलेशन': 'translation',
+  'इंफॉर्मेशन': 'information',
+  'इन्फॉर्मेशन': 'information',
+  'ऑर्गनाइजेशन': 'organization',
+  'सिचुएशन': 'situation',
+  'अटेंशन': 'attention',
+  'डिसीजन': 'decision',
+  'वर्जन': 'version',
+  'विजन': 'vision',
+  'एल्गोरिदम': 'algorithm',
+  'एल्गोरिथम': 'algorithm',
+  'टेक्नोलॉजी': 'technology',
+  'कंप्यूटर': 'computer',
+  'कम्प्यूटर': 'computer',
+  'इंटरनेट': 'internet',
+  'सॉफ्टवेयर': 'software',
+  'हार्डवेयर': 'hardware',
+  'नेटवर्क': 'network',
+  'ऑनलाइन': 'online',
+  'वेबसाइट': 'website',
+  'ऐप': 'app',
+  'टूल': 'tool',
+  'टूल्स': 'tools',
+  'एआई': 'AI',
+  'टाइम': 'time',
+  'क्लाउड': 'cloud',
+  'सर्वर': 'server',
+  'प्राइवेट': 'private',
+  'पब्लिक': 'public',
+  'सिक्योर': 'secure',
+  'सिंपल': 'simple',
+  'ईजी': 'easy',
+  'इजी': 'easy',
+  'फास्ट': 'fast',
+  'फ़ास्ट': 'fast',
+  'क्विक': 'quick',
+  'स्मार्ट': 'smart',
+  'फीचर': 'feature',
+  'फ़ीचर': 'feature',
+  'फीचर्स': 'features',
+  'डिज़ाइन': 'design',
+  'डिजाइन': 'design',
+  'बटन': 'button',
+  'क्लिक': 'click',
+  'सेटिंग': 'setting',
+  'सेटिंग्स': 'settings',
+  'इफेक्ट': 'effect',
+  'इफेक्ट्स': 'effects',
+  'फ़िल्टर': 'filter',
+  'फिल्टर': 'filter',
+  'ऑडियंस': 'audience',
+  'एनालिटिक्स': 'analytics',
+  'स्ट्रेटेजी': 'strategy',
+  'प्रोसेस': 'process',
+  'रिजल्ट': 'result',
+  'रिजल्ट्स': 'results',
+  'हिस्ट्री': 'history',
+  'साइंस': 'science',
+  'ह्यूमन': 'human',
+  'फ्यूचर': 'future',
+  'सीक्रेट': 'secret',
+  'सीक्रेट्स': 'secrets',
+  'फॉर्मूला': 'formula',
+  'पावर': 'power',
+  'माइंडसेट': 'mindset',
+  'एनर्जी': 'energy',
+  'फोकस': 'focus',
+  'लेवल': 'level',
+  'नेक्स्ट': 'next',
+  'सिस्टम': 'system',
+  'इनकम': 'income',
+  'सक्सेस': 'success',
+  'सक्सेसफुल': 'successful',
+  'लाइफस्टाइल': 'lifestyle',
+  'चैलेंज': 'challenge',
+  'टारगेट': 'target',
+  'टार्गेट': 'target',
+  'अपडेट': 'update',
+  'डाउनलोड': 'download',
+  'इंस्टॉल': 'install',
+  'इन्स्टॉल': 'install',
+  'रिकॉर्डिंग': 'recording',
+  'स्टोरी': 'story',
+  'पोस्ट': 'post',
+  'व्यूज': 'views',
+  'व्यूज़': 'views',
+  'रीच': 'reach',
+  'एंगेजमेंट': 'engagement',
+  'प्रोफाइल': 'profile',
+  'अकाउंट': 'account',
+  'पासवर्ड': 'password',
+  'लॉगिन': 'login',
+  'साइनअप': 'signup',
+  'चेक': 'check',
+  'टेस्ट': 'test',
+  'डायरेक्ट': 'direct',
+  'एक्चुअली': 'actually',
+  'बेसिकली': 'basically',
+  'ऑब्वियसली': 'obviously',
+  'सीरियसली': 'seriously',
+  'डेफिनेटली': 'definitely',
+  'प्रोबेबली': 'probably',
+  'एक्जेक्टली': 'exactly',
+  'परफेक्ट': 'perfect',
+  'ऑसम': 'awesome',
+  'अमेजिंग': 'amazing',
+  'क्रेजी': 'crazy',
+  'पॉज': 'pause',
+  'प्ले': 'play',
+  'एक्सप्लेन': 'explain',
+  'एक्सप्लेंड': 'explained',
+  'डिटेल': 'detail',
+  'डिटेल्स': 'details',
+  'पार्ट': 'part',
+  'एपिसोड': 'episode',
+  'सीरीज': 'series',
+  'कॉन्सेप्ट': 'concept',
+  'प्रूफ': 'proof',
+  'एग्जांपल': 'example',
+  'रीजन': 'reason',
+  'फैक्ट': 'fact',
+  'फैक्ट्स': 'facts',
+  'मेथड': 'method',
+  'स्टेप': 'step',
+  'स्टेप्स': 'steps',
+  'गाइड': 'guide',
   'आइडिया': 'idea',
   'टिप्स': 'tips',
   'ट्रिक': 'trick',
   'हैक': 'hack',
+  'हैक्स': 'hacks',
   'स्टार्ट': 'start',
   'स्टॉप': 'stop',
   'टॉप': 'top',
@@ -76,34 +243,6 @@ const HINGLISH_DICT: Record<string, string> = {
   'प्रो': 'pro',
   'मनी': 'money',
   'प्रॉफिट': 'profit',
-  'ऑनलाइन': 'online',
-  'वेबसाइट': 'website',
-  'ऐप': 'app',
-  'टूल': 'tool',
-  'एआई': 'AI',
-  'टाइम': 'time',
-  'क्लाउड': 'cloud',
-  'सर्वर': 'server',
-  'प्राइवेट': 'private',
-  'सिंपल': 'simple',
-  'फास्ट': 'fast',
-  'फ़ास्ट': 'fast',
-  'स्मार्ट': 'smart',
-  'फीचर': 'feature',
-  'फ़ीचर': 'feature',
-  'डिज़ाइन': 'design',
-  'डिजाइन': 'design',
-  'स्क्रीन': 'screen',
-  'बटन': 'button',
-  'क्लिक': 'click',
-  'सेटिंग': 'setting',
-  'सेटिंग्स': 'settings',
-  'म्यूजिक': 'music',
-  'म्यूज़िक': 'music',
-  'इफेक्ट': 'effect',
-  'इफेक्ट्स': 'effects',
-  'फ़िल्टर': 'filter',
-  'फिल्टर': 'filter',
 
   // High-frequency spoken Hindi words (natural Hinglish spelling)
   'मैं': 'main',
@@ -467,6 +606,42 @@ const URDU_TO_HINDI_DICT: Record<string, string> = {
   'گھونٹساں': 'घूंट',
   'گلاس': 'गिलास',
   'پانی': 'पानी',
+  'ایولیوشن': 'इवोल्यूशन',
+  'سولیوشن': 'सॉल्यूशन',
+  'ایلگوردم': 'एल्गोरिदम',
+  'ٹیکنالوجی': 'टेक्नोलॉजी',
+  'کمپیوٹر': 'कंप्यूटर',
+  'انٹرنیٹ': 'इंटरनेट',
+  'چینل': 'चैनल',
+  'سبسکرائب': 'सब्सक्राइब',
+  'فالورز': 'फॉलोअर्स',
+  'آڈینس': 'ऑडियंस',
+  'اسٹریٹجی': 'स्ट्रेटेजी',
+  'پروسیس': 'प्रोसेस',
+  'رزلٹ': 'रिजल्ट',
+  'ہسٹری': 'हिस्ट्री',
+  'سائنس': 'साइंस',
+  'فیوچر': 'फ्यूचर',
+  'سیکرٹ': 'सीक्रेट',
+  'پاور': 'पावर',
+  'سسٹم': 'सिस्टम',
+  'چیلنج': 'चैलेंज',
+  'ٹارگٹ': 'टारगेट',
+  'اپڈیٹ': 'अपडेट',
+  'ڈاؤنلوڈ': 'डाउनलोड',
+  'انسٹال': 'इंस्टॉल',
+  'اسکرین': 'स्क्रीन',
+  'کیمرہ': 'कैमरा',
+  'موبائل': 'मोबाइल',
+  'فون': 'फोन',
+  'پوسٹ': 'पोस्ट',
+  'ویوز': 'व्यूज',
+  'اکاؤنٹ': 'अकाउंट',
+  'چیک': 'चेक',
+  'ٹیسٹ': 'टेस्ट',
+  'ایزی': 'ईजी',
+  'پرفیکٹ': 'परफेक्ट',
+  'کریزی': 'क्रेजी',
   'نے': 'ने',
   'میں': 'में',
   'ہے': 'है',
@@ -609,8 +784,14 @@ const URDU_TO_HINDI_DICT: Record<string, string> = {
   'کھاؤ': 'खाओ',
 };
 
+const DEVA_CONSONANT_SET = new Set([
+  'क', 'ख', 'ग', 'घ', 'ङ', 'च', 'छ', 'ज', 'झ', 'ञ',
+  'ट', 'ठ', 'ड', 'ढ', 'ण', 'त', 'थ', 'द', 'ध', 'न',
+  'प', 'फ', 'ब', 'भ', 'म', 'य', 'र', 'ल', 'व', 'श',
+  'ष', 'स', 'ह', 'ड़', 'ढ़', 'ख़', 'ग़', 'ज़', 'फ़', 'क़'
+]);
+
 const URDU_CHAR_TO_DEVANAGARI: Record<string, string> = {
-  'ا': 'ा',
   'آ': 'आ',
   'ب': 'ब',
   'پ': 'प',
@@ -618,7 +799,7 @@ const URDU_CHAR_TO_DEVANAGARI: Record<string, string> = {
   'ٹ': 'ट',
   'ث': 'स',
   'ج': 'ज',
-  'چ': 'च',
+  'च': 'च',
   'ح': 'ह',
   'خ': 'ख़',
   'د': 'द',
@@ -644,12 +825,9 @@ const URDU_CHAR_TO_DEVANAGARI: Record<string, string> = {
   'م': 'म',
   'ن': 'न',
   'ں': 'ँ',
-  'و': 'ो',
   'ہ': 'ह',
   'ۂ': 'ह',
   'ھ': 'ह',
-  'ی': 'ी',
-  'ے': 'े',
   'ئ': 'ई',
   'ء': '',
 };
@@ -695,8 +873,19 @@ export function urduToDevanagari(text: string): string {
       const chars = [...c];
       for (let i = 0; i < chars.length; i++) {
         const ch = chars[i];
-        if (i === 0 && ch === 'ا') {
-          out += 'अ';
+        const lastChar = out.slice(-1);
+        const prevIsConsonant = Boolean(lastChar && DEVA_CONSONANT_SET.has(lastChar));
+
+        if (ch === 'ا') {
+          out += prevIsConsonant ? 'ा' : (i === 0 ? 'अ' : 'आ');
+        } else if (ch === 'و') {
+          out += prevIsConsonant ? 'ो' : (i === 0 ? 'ओ' : 'व');
+        } else if (ch === 'ی') {
+          out += prevIsConsonant ? 'ी' : (i === 0 ? 'ई' : 'य');
+        } else if (ch === 'ے') {
+          out += prevIsConsonant ? 'े' : 'ए';
+        } else if (ch === 'آ') {
+          out += 'आ';
         } else if (URDU_CHAR_TO_DEVANAGARI[ch] !== undefined) {
           out += URDU_CHAR_TO_DEVANAGARI[ch];
         } else {
@@ -788,6 +977,18 @@ function transliterateDevanagariWord(word: string): string {
       continue;
     }
 
+    if (MATRAS[ch]) {
+      out += MATRAS[ch];
+      continue;
+    }
+    if (ch === HALANT) {
+      continue;
+    }
+    // Never allow any Devanagari character to leak into Latin output
+    if (DEVANAGARI_REGEX.test(ch)) {
+      continue;
+    }
+
     // Keep Latin characters, punctuation, emojis as-is
     out += ch;
   }
@@ -809,11 +1010,17 @@ export function toNaturalHinglish(text: string): string {
     .replace(/।/g, '.')
     .split(/(\s+)/)
     .map((part) => {
-      if (!part.trim() || !hasDevanagari(part)) return part;
+      if (!part.trim()) return part;
+      if (HINGLISH_DICT[part]) return HINGLISH_DICT[part];
+
+      if (!hasDevanagari(part)) return part;
       // Separate leading/trailing punctuation so dictionary lookup matches cleanly
-      const match = part.match(/^([^\u0900-\u097Fa-zA-Z0-9]*)([\u0900-\u097Fa-zA-Z0-9]+)([^\u0900-\u097Fa-zA-Z0-9]*)$/);
+      const match = part.match(
+        /^([^\u0900-\u097Fa-zA-Z0-9]*)([\u0900-\u097Fa-zA-Z0-9]+)([^\u0900-\u097Fa-zA-Z0-9]*)$/
+      );
       if (!match) return transliterateDevanagariWord(part);
       const [, lead, core, trail] = match;
+      if (HINGLISH_DICT[core]) return `${lead}${HINGLISH_DICT[core]}${trail}`;
       return `${lead}${transliterateDevanagariWord(core)}${trail}`;
     })
     .join('');
