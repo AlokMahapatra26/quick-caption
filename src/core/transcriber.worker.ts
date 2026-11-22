@@ -110,29 +110,17 @@ async function initPipeline(
     envAny.backends.onnx.wasm.numThreads = Math.max(1, Math.min(4, totalCores - 2));
   }
 
-  let instance: TranscriberPipeline;
-  try {
-    // Attempt GPU hardware acceleration first via WebGPU
-    instance = await mod.pipeline('automatic-speech-recognition', modelId, {
-      quantized: true,
-      device: 'webgpu',
-      progress_callback: (p) => {
-        if (p.status === 'progress' && p.loaded && p.total) {
-          onProgress(Math.round((p.loaded / p.total) * 100));
-        }
-      },
-    });
-  } catch {
-    // Fall back gracefully to CPU WebAssembly with capped threads
-    instance = await mod.pipeline('automatic-speech-recognition', modelId, {
-      quantized: true,
-      progress_callback: (p) => {
-        if (p.status === 'progress' && p.loaded && p.total) {
-          onProgress(Math.round((p.loaded / p.total) * 100));
-        }
-      },
-    });
-  }
+  let instance = pipelineCache.get(modelId);
+  if (instance) return instance;
+
+  instance = await mod.pipeline('automatic-speech-recognition', modelId, {
+    quantized: true,
+    progress_callback: (p) => {
+      if (p.status === 'progress' && p.loaded && p.total) {
+        onProgress(Math.round((p.loaded / p.total) * 100));
+      }
+    },
+  });
 
   pipelineCache.set(modelId, instance);
   return instance;
@@ -212,8 +200,8 @@ workerSelf.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
       type: 'STATUS',
       message:
         language === 'english'
-          ? 'Transcribing English speech locally (39MB)...'
-          : 'Transcribing speech locally (auto-detecting language, 75MB)...',
+          ? 'Transcribing English speech...'
+          : 'Transcribing Hinglish speech...',
     });
 
     const options: TranscribeOptions = {
@@ -223,6 +211,7 @@ workerSelf.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
     };
 
     if (isMultilingual) {
+      options.language = 'hindi';
       options.task = 'transcribe';
     }
 
