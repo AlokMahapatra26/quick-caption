@@ -5,10 +5,12 @@ interface SettingsModalProps {
   open: boolean;
   silenceEnabled: boolean;
   silenceThreshold: number;
+  groqApiKey: string;
   multilingualModelSize?: MultilingualModelSize;
   onClose: () => void;
   onToggleSilence: (enabled: boolean) => void;
   onChangeSilenceThreshold: (threshold: number) => void;
+  onUpdateGroqApiKey: (key: string) => void;
   onChangeMultilingualModelSize?: (size: MultilingualModelSize) => void;
 }
 
@@ -16,9 +18,11 @@ export function SettingsModal({
   open,
   silenceEnabled,
   silenceThreshold,
+  groqApiKey,
   onClose,
   onToggleSilence,
   onChangeSilenceThreshold,
+  onUpdateGroqApiKey,
 }: SettingsModalProps) {
   if (!open) return null;
 
@@ -80,6 +84,64 @@ export function SettingsModal({
                 </select>
               </div>
             )}
+          </div>
+
+          <div className="settings-group mt-3">
+            <div className="mono-eyebrow mb-2">CLOUD SPEECH (HINGLISH)</div>
+            <div className="settings-row">
+              <div className="settings-row-info">
+                <strong>Groq API Key (Whisper Large v3)</strong>
+                <p className="settings-row-desc">
+                  Enables 95%+ accurate Hinglish code-switching in ~0.5s
+                </p>
+              </div>
+              <span
+                className="badge-pill"
+                style={{
+                  color: groqApiKey
+                    ? 'var(--accent-green, #10b981)'
+                    : 'var(--text-muted, #71717a)',
+                }}
+              >
+                {groqApiKey ? 'Configured' : 'Optional'}
+              </span>
+            </div>
+            <div
+              className="settings-sub-row"
+              style={{
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                gap: '8px',
+              }}
+            >
+              <input
+                type="password"
+                className="control-input"
+                placeholder="Paste Groq key (gsk_...)"
+                value={groqApiKey}
+                onChange={(e) => onUpdateGroqApiKey(e.target.value)}
+              />
+              <span
+                style={{
+                  fontSize: '11.5px',
+                  color: 'var(--text-muted, #71717a)',
+                }}
+              >
+                Free key from{' '}
+                <a
+                  href="https://console.groq.com/keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: 'var(--accent-blue, #0070f3)',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  console.groq.com/keys
+                </a>
+                . Saved securely in your local browser storage.
+              </span>
+            </div>
           </div>
 
           <div className="settings-group mt-3">

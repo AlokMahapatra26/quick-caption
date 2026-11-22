@@ -160,7 +160,6 @@ export function Sidebar(props: SidebarProps) {
           activeSegmentId={props.activeSegmentId}
           activeWordId={props.activeWordId}
           captionLanguage={props.captionLanguage}
-          multilingualModelSize={props.multilingualModelSize}
           onChangeLanguage={props.onChangeLanguage}
           onRunWhisper={props.onRunWhisper}
           onLoadSample={props.onLoadSample}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ExportModal } from './components/ExportModal';
+import { LanguagePromptModal } from './components/LanguagePromptModal';
 import { SettingsModal } from './components/SettingsModal';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
@@ -117,14 +118,25 @@ export function App() {
 
       <ExportModal state={studio.exportModal} onClose={studio.closeExportModal} />
 
+      <LanguagePromptModal
+        open={studio.languagePromptOpen}
+        selectedLanguage={studio.captionLanguage}
+        groqApiKey={studio.groqApiKey}
+        onUpdateGroqApiKey={studio.handleUpdateGroqApiKey}
+        onConfirm={studio.confirmLanguageAndTranscribe}
+        onClose={studio.closeLanguagePrompt}
+      />
+
       <SettingsModal
         open={settingsOpen}
         silenceEnabled={studio.silenceEnabled}
         silenceThreshold={studio.silenceThreshold}
+        groqApiKey={studio.groqApiKey}
         multilingualModelSize={studio.multilingualModelSize}
         onClose={() => setSettingsOpen(false)}
         onToggleSilence={studio.handleToggleSilence}
         onChangeSilenceThreshold={studio.handleChangeSilenceThreshold}
+        onUpdateGroqApiKey={studio.handleUpdateGroqApiKey}
         onChangeMultilingualModelSize={studio.handleChangeMultilingualModelSize}
       />
     </div>

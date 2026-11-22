@@ -1,9 +1,10 @@
 import { memo } from 'react';
 import type {
+  CaptionLanguage,
   SubtitleSegment,
 } from '../types/caption';
 import { formatTime } from '../utils/formatTime';
-import { MicIcon } from './Icons';
+import { GlobeIcon, LanguageIcon, MicIcon } from './Icons';
 
 interface TranscriptCardProps {
   segment: SubtitleSegment;
@@ -62,9 +63,8 @@ interface TranscriptPanelProps {
   segments: SubtitleSegment[];
   activeSegmentId: string | null;
   activeWordId: string | null;
-  captionLanguage?: string;
-  multilingualModelSize?: string;
-  onChangeLanguage?: (lang: any) => void;
+  captionLanguage?: CaptionLanguage;
+  onChangeLanguage?: (lang: CaptionLanguage) => void;
   onRunWhisper: () => void;
   onLoadSample: () => void;
   onSeek: (time: number) => void;
@@ -75,6 +75,8 @@ export function TranscriptPanel({
   segments,
   activeSegmentId,
   activeWordId,
+  captionLanguage = 'english',
+  onChangeLanguage,
   onRunWhisper,
   onLoadSample,
   onSeek,
@@ -82,6 +84,39 @@ export function TranscriptPanel({
 }: TranscriptPanelProps) {
   return (
     <div className="tab-pane active">
+      {/* Speech Language Mode Switcher */}
+      <div className="transcript-script-header">
+        <span className="script-header-title">Speech Language</span>
+        <div
+          className="script-segmented"
+          role="radiogroup"
+          aria-label="Speech Language"
+        >
+          <button
+            type="button"
+            className={`script-seg-btn${
+              captionLanguage === 'english' ? ' active' : ''
+            }`}
+            onClick={() => onChangeLanguage?.('english')}
+            title="Fast In-Browser AI (100% Offline)"
+          >
+            <LanguageIcon size={13} />
+            <span>English (Local)</span>
+          </button>
+          <button
+            type="button"
+            className={`script-seg-btn${
+              captionLanguage === 'hinglish' ? ' active' : ''
+            }`}
+            onClick={() => onChangeLanguage?.('hinglish')}
+            title="Groq Whisper Large v3 (Studio Accuracy)"
+          >
+            <GlobeIcon size={13} />
+            <span>Hinglish (Groq AI)</span>
+          </button>
+        </div>
+      </div>
+
       <div className="transcript-header-actions">
         <button
           type="button"
@@ -89,7 +124,7 @@ export function TranscriptPanel({
           onClick={onRunWhisper}
         >
           <MicIcon />
-          Transcribe Speech
+          Transcribe {captionLanguage === 'hinglish' ? 'Hinglish' : 'English'}
         </button>
         <button
           type="button"

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { extract16kHzMonoAudio } from '../core/audioExtractor';
 import { generateSyntheticDemoVideo } from '../core/demoVideo';
 import { VideoExporter } from '../core/exporter';
+import { transcribeWithGroq } from '../core/groqTranscriber';
 import {
   DEMO_HINDI_WORDS,
   DEMO_HINGLISH_WORDS,
@@ -100,8 +101,22 @@ export function useStudioController() {
     useState<CaptionLanguage>(getInitialLanguage);
   const [multilingualModelSize, setMultilingualModelSize] =
     useState<MultilingualModelSize>('base');
+  const [groqApiKey, setGroqApiKey] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('autocaption_groq_api_key') || '';
+    }
+    return '';
+  });
   const captionLanguageRef = useRef<CaptionLanguage>(getInitialLanguage());
   const multilingualModelSizeRef = useRef<MultilingualModelSize>('base');
+
+  const handleUpdateGroqApiKey = useCallback((key: string) => {
+    const trimmed = key.trim();
+    setGroqApiKey(trimmed);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('autocaption_groq_api_key', trimmed);
+    }
+  }, []);
 
   const [silenceEnabled, setSilenceEnabled] = useState(false);
   const [silenceThreshold, setSilenceThreshold] = useState(0.4);
@@ -267,7 +282,7 @@ export function useStudioController() {
       setLoader({
         visible: true,
         text: 'Extracting 16kHz audio from video...',
-        progress: 5,
+        progress: 10,
       });
 
       try {
@@ -275,9 +290,41 @@ export function useStudioController() {
           setLoader({ visible: true, text: msg, progress: pct });
         });
 
+        // 1. Hinglish via Groq Whisper Large v3
+        if (activeLang === 'hinglish') {
+          const key =
+            groqApiKey ||
+            (typeof window !== 'undefined'
+              ? localStorage.getItem('autocaption_groq_api_key') || ''
+              : '');
+          if (!key.trim()) {
+            setLanguagePromptOpen(true);
+            setLoader({ visible: false, text: '', progress: 0 });
+            return;
+          }
+
+          setLoader({
+            visible: true,
+            text: 'Transcribing Hinglish with Groq Whisper Large v3...',
+            progress: 50,
+          });
+
+          const words = await transcribeWithGroq(audioResult.audioData, {
+            apiKey: key,
+            onStatus: (msg) =>
+              setLoader((prev) => ({ ...prev, text: msg, progress: 75 })),
+          });
+
+          setLoader({ visible: false, text: '', progress: 100 });
+          applyWords(words);
+          return;
+        }
+
+        // 2. English via In-Browser Whisper Tiny (39MB)
         setLoader((prev) => ({
           ...prev,
-          text: 'Transcribing with Whisper AI...',
+          text: 'Transcribing English with Whisper AI...',
+          progress: 50,
         }));
 
         if (workerRef.current) {
@@ -286,7 +333,7 @@ export function useStudioController() {
             {
               type: 'TRANSCRIBE',
               audioData: audioResult.audioData,
-              language: activeLang,
+              language: 'english',
               modelSize: multilingualModelSizeRef.current,
             },
             [audioResult.audioData.buffer]
@@ -294,12 +341,21 @@ export function useStudioController() {
         } else {
           loadSampleCaptions();
         }
-      } catch (err) {
-        console.warn('Audio extraction notice, loading sample words:', err);
-        loadSampleCaptions();
+      } catch (err: unknown) {
+        console.warn('Speech recognition notice:', err);
+        setLoader({ visible: false, text: '', progress: 0 });
+        if (activeLang === 'hinglish') {
+          const msg =
+            err instanceof Error
+              ? err.message
+              : 'Failed to transcribe Hinglish with Groq.';
+          alert(msg);
+        } else {
+          loadSampleCaptions();
+        }
       }
     },
-    [loadSampleCaptions]
+    [applyWords, groqApiKey, loadSampleCaptions]
   );
 
   const confirmLanguageAndTranscribe = useCallback(
@@ -362,9 +418,9 @@ export function useStudioController() {
       skipAutoTranscribeRef.current = false;
       loadSampleCaptions();
     } else {
-      void runSpeechRecognition('english');
+      setLanguagePromptOpen(true);
     }
-  }, [loadSampleCaptions, runSpeechRecognition, startRenderLoop]);
+  }, [loadSampleCaptions, startRenderLoop]);
 
   const handleLoadDemoVideo = useCallback(async () => {
     if (isGeneratingDemo) return;
@@ -733,7 +789,9 @@ export function useStudioController() {
     runSpeechRecognition,
     loadSampleCaptions,
     updateWordText,
-    // Language Selection Modal
+    // Language Selection Modal & Groq Cloud
+    groqApiKey,
+    handleUpdateGroqApiKey,
     languagePromptOpen,
     confirmLanguageAndTranscribe,
     closeLanguagePrompt,
