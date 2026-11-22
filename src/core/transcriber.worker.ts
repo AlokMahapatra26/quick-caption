@@ -1,19 +1,9 @@
 /**
- * AutoCaption Studio • Multilingual Whisper AI Web Worker
- * Supports English (whisper-tiny.en ~39MB) and Hinglish / Hindi
- * (whisper-base ~75MB or whisper-small ~190MB) 100% locally in the browser.
+ * AutoCaption Studio • Whisper AI Web Worker
+ * Uses whisper-tiny.en (ultra-fast, ~39MB) 100% locally in the browser.
  */
-import {
-  DEMO_HINDI_WORDS,
-  DEMO_HINGLISH_WORDS,
-  hasArabicOrUrdu,
-  toNaturalHinglish,
-  urduToDevanagari,
-} from './hinglish';
 import { DEMO_SAMPLE_WORDS } from './presets';
 import type {
-  CaptionLanguage,
-  MultilingualModelSize,
   RawWord,
   WorkerInMessage,
   WorkerOutMessage,
@@ -50,27 +40,7 @@ const workerSelf = self as unknown as WorkerScope;
 
 const pipelineCache = new Map<string, TranscriberPipeline>();
 
-function resolveModelConfig(
-  language: CaptionLanguage,
-  modelSize: MultilingualModelSize
-): { modelId: string; isMultilingual: boolean } {
-  if (language === 'english') {
-    return {
-      modelId: 'Xenova/whisper-tiny.en',
-      isMultilingual: false,
-    };
-  }
-  if (modelSize === 'small') {
-    return {
-      modelId: 'Xenova/whisper-small',
-      isMultilingual: true,
-    };
-  }
-  return {
-    modelId: 'Xenova/whisper-base',
-    isMultilingual: true,
-  };
-}
+const MODEL_ID = 'Xenova/whisper-tiny.en';
 
 async function initPipeline(
   modelId: string,
@@ -138,13 +108,8 @@ function buildMergedWords(chunks: WhisperChunk[]): RawWord[] {
 
   for (const chunk of chunks) {
     const rawText = chunk.text ?? '';
-    let trimmed = rawText.trim();
+    const trimmed = rawText.trim();
     if (!trimmed) continue;
-
-    // If Whisper output any Urdu/Arabic script, immediately convert to standard Devanagari Hindi
-    if (hasArabicOrUrdu(trimmed)) {
-      trimmed = urduToDevanagari(trimmed);
-    }
 
     const start = chunk.timestamp[0] ?? 0;
     const end = chunk.timestamp[1] ?? start + 0.3;
@@ -171,32 +136,18 @@ workerSelf.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
   const {
     type,
     audioData,
-    language = 'hinglish',
-    modelSize = 'base',
     fallback,
   } = e.data;
 
   if (type !== 'TRANSCRIBE') return;
 
-  const fallbackSample =
-    language === 'english'
-      ? DEMO_SAMPLE_WORDS
-      : language === 'hindi'
-      ? DEMO_HINDI_WORDS
-      : DEMO_HINGLISH_WORDS;
-
   if (fallback || !audioData) {
     workerSelf.postMessage({
       type: 'TRANSCRIBE_SUCCESS',
-      words: fallbackSample,
+      words: DEMO_SAMPLE_WORDS,
     });
     return;
   }
-
-  const { modelId, isMultilingual } = resolveModelConfig(
-    language,
-    modelSize
-  );
 
   try {
     workerSelf.postMessage({
@@ -204,20 +155,13 @@ workerSelf.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
       message: 'Loading speech recognition engine...',
     });
 
-    const transcriber = await initPipeline(modelId, (percent) => {
+    const transcriber = await initPipeline(MODEL_ID, (percent) => {
       workerSelf.postMessage({ type: 'PROGRESS', percent });
     });
 
-    const statusMessage =
-      language === 'english'
-        ? 'Transcribing English speech...'
-        : language === 'hindi'
-        ? 'Transcribing Hindi speech...'
-        : 'Transcribing Hinglish speech...';
-
     workerSelf.postMessage({
       type: 'STATUS',
-      message: statusMessage,
+      message: 'Transcribing English speech...',
     });
 
     const options: TranscribeOptions = {
@@ -226,45 +170,27 @@ workerSelf.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
       stride_length_s: 5,
     };
 
-    if (isMultilingual) {
-      options.language = 'hindi';
-      options.task = 'transcribe';
-    }
-
     const output = await transcriber(audioData, options);
     const nativeWords = output.chunks ? buildMergedWords(output.chunks) : [];
 
     if (nativeWords.length === 0) {
       workerSelf.postMessage({
         type: 'TRANSCRIBE_SUCCESS',
-        words: fallbackSample,
+        words: DEMO_SAMPLE_WORDS,
       });
       return;
     }
 
-    const finalWords: RawWord[] =
-      language === 'hinglish'
-        ? nativeWords.map((w) => ({
-            ...w,
-            word: toNaturalHinglish(w.word),
-          }))
-        : language === 'hindi'
-        ? nativeWords.map((w) => ({
-            ...w,
-            word: urduToDevanagari(w.word),
-          }))
-        : nativeWords;
-
     workerSelf.postMessage({
       type: 'TRANSCRIBE_SUCCESS',
-      words: finalWords,
+      words: nativeWords,
       nativeWords,
     });
   } catch (err) {
     console.warn('Falling back to sample captions:', err);
     workerSelf.postMessage({
       type: 'TRANSCRIBE_SUCCESS',
-      words: fallbackSample,
+      words: DEMO_SAMPLE_WORDS,
       warning: 'Used sample captions (offline/test mode).',
     });
   }

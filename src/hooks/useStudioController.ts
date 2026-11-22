@@ -49,16 +49,6 @@ export interface ExportModalState {
 }
 
 function getInitialLanguage(): CaptionLanguage {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('autocaption_caption_lang');
-    if (saved === 'english' || saved === 'hinglish' || saved === 'hindi') {
-      return saved as CaptionLanguage;
-    }
-    const isLikelyIndian =
-      typeof navigator !== 'undefined' &&
-      /^(hi|en-IN)/i.test(navigator.language || '');
-    return isLikelyIndian ? 'hinglish' : 'english';
-  }
   return 'english';
 }
 
@@ -372,9 +362,9 @@ export function useStudioController() {
       skipAutoTranscribeRef.current = false;
       loadSampleCaptions();
     } else {
-      setLanguagePromptOpen(true);
+      void runSpeechRecognition('english');
     }
-  }, [loadSampleCaptions, startRenderLoop]);
+  }, [loadSampleCaptions, runSpeechRecognition, startRenderLoop]);
 
   const handleLoadDemoVideo = useCallback(async () => {
     if (isGeneratingDemo) return;

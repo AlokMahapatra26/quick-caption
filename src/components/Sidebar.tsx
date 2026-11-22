@@ -133,8 +133,6 @@ export function Sidebar(props: SidebarProps) {
           styleConfig={props.styleConfig}
           useUppercase={props.useUppercase}
           useEmojis={props.useEmojis}
-          captionLanguage={props.captionLanguage}
-          onChangeLanguage={props.onChangeLanguage}
           silenceEnabled={props.silenceEnabled}
           silenceThreshold={props.silenceThreshold}
           jumpcutStats={props.jumpcutStats}

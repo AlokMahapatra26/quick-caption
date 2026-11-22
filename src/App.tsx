@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { ExportModal } from './components/ExportModal';
-import { LanguagePromptModal } from './components/LanguagePromptModal';
 import { SettingsModal } from './components/SettingsModal';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
@@ -117,13 +116,6 @@ export function App() {
       </div>
 
       <ExportModal state={studio.exportModal} onClose={studio.closeExportModal} />
-
-      <LanguagePromptModal
-        open={studio.languagePromptOpen}
-        selectedLanguage={studio.captionLanguage}
-        onConfirm={studio.confirmLanguageAndTranscribe}
-        onClose={studio.closeLanguagePrompt}
-      />
 
       <SettingsModal
         open={settingsOpen}

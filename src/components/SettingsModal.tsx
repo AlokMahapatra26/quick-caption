@@ -5,22 +5,20 @@ interface SettingsModalProps {
   open: boolean;
   silenceEnabled: boolean;
   silenceThreshold: number;
-  multilingualModelSize: MultilingualModelSize;
+  multilingualModelSize?: MultilingualModelSize;
   onClose: () => void;
   onToggleSilence: (enabled: boolean) => void;
   onChangeSilenceThreshold: (threshold: number) => void;
-  onChangeMultilingualModelSize: (size: MultilingualModelSize) => void;
+  onChangeMultilingualModelSize?: (size: MultilingualModelSize) => void;
 }
 
 export function SettingsModal({
   open,
   silenceEnabled,
   silenceThreshold,
-  multilingualModelSize,
   onClose,
   onToggleSilence,
   onChangeSilenceThreshold,
-  onChangeMultilingualModelSize,
 }: SettingsModalProps) {
   if (!open) return null;
 
@@ -111,23 +109,17 @@ export function SettingsModal({
             </div>
             <div className="settings-row">
               <div className="settings-row-info">
-                <strong>Multilingual Model Precision</strong>
+                <strong>Whisper Speech Model</strong>
                 <p className="settings-row-desc">
-                  Model configuration for Hinglish and Hindi speech recognition
+                  Ultra-fast in-browser English model (Whisper-Tiny)
                 </p>
               </div>
-              <select
-                className="control-select"
-                value={multilingualModelSize}
-                onChange={(e) =>
-                  onChangeMultilingualModelSize(
-                    e.target.value as MultilingualModelSize
-                  )
-                }
+              <span
+                className="badge-pill"
+                style={{ color: 'var(--accent-blue, #0070f3)' }}
               >
-                <option value="base">Standard (Fast)</option>
-                <option value="small">High Precision (8GB+ RAM)</option>
-              </select>
+                Whisper Tiny.en
+              </span>
             </div>
             <div className="settings-row">
               <div className="settings-row-info">

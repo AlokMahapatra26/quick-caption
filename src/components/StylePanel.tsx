@@ -1,15 +1,12 @@
 import { useState } from 'react';
 import type {
   AnimationType,
-  CaptionLanguage,
   PresetKey,
   SubtitleStyleConfig,
 } from '../types/caption';
 import {
-  GlobeIcon,
   MoveVerticalIcon,
   PaletteIcon,
-  ScriptIcon,
   SlidersIcon,
   StyleIcon,
   TuneOptionsIcon,
@@ -46,8 +43,6 @@ interface StylePanelProps {
   styleConfig: SubtitleStyleConfig;
   useUppercase: boolean;
   useEmojis: boolean;
-  captionLanguage?: CaptionLanguage;
-  onChangeLanguage?: (lang: CaptionLanguage) => void;
   silenceEnabled: boolean;
   silenceThreshold: number;
   jumpcutStats: string;
@@ -73,8 +68,6 @@ export function StylePanel({
   styleConfig,
   useUppercase,
   useEmojis,
-  captionLanguage,
-  onChangeLanguage,
   silenceEnabled,
   silenceThreshold,
   jumpcutStats,
@@ -147,31 +140,6 @@ export function StylePanel({
         {/* Typography & Formatting */}
         <div className="panel-section">
           <span className="mono-eyebrow">TYPOGRAPHY</span>
-
-          {/* Caption Script Switcher: Latin (Hinglish) vs Devanagari (Hindi) */}
-          <div className="control-row">
-            <span className="control-label">Script</span>
-            <div className="script-segmented" role="radiogroup" aria-label="Caption Script">
-              <button
-                type="button"
-                className={`script-seg-btn${captionLanguage === 'hinglish' ? ' active' : ''}`}
-                onClick={() => onChangeLanguage?.('hinglish')}
-                title="Latin Script (Hinglish alphabet)"
-              >
-                <GlobeIcon size={12} />
-                <span>Latin (Hinglish)</span>
-              </button>
-              <button
-                type="button"
-                className={`script-seg-btn${captionLanguage === 'hindi' ? ' active' : ''}`}
-                onClick={() => onChangeLanguage?.('hindi')}
-                title="Devanagari Script (Hindi alphabet)"
-              >
-                <ScriptIcon size={12} />
-                <span>Devanagari (Hindi)</span>
-              </button>
-            </div>
-          </div>
 
           <div className="control-row">
             <span className="control-label">Typeface</span>
@@ -549,22 +517,6 @@ export function StylePanel({
                       : 'Flat'}
                 </button>
               ))}
-              <button
-                type="button"
-                className={`filter-pill${captionLanguage === 'hinglish' ? ' active' : ''}`}
-                onClick={() => onChangeLanguage?.('hinglish')}
-                title="Latin Script (Hinglish)"
-              >
-                Latin
-              </button>
-              <button
-                type="button"
-                className={`filter-pill${captionLanguage === 'hindi' ? ' active' : ''}`}
-                onClick={() => onChangeLanguage?.('hindi')}
-                title="Devanagari Script (Hindi)"
-              >
-                Devanagari
-              </button>
               <label className="toggle-card mobile-toggle-pill">
                 <span className="toggle-text">CAPS</span>
                 <input
