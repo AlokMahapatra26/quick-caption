@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ExportModal } from './components/ExportModal';
 import { LanguagePromptModal } from './components/LanguagePromptModal';
-import { SettingsModal } from './components/SettingsModal';
+import { SettingsPage } from './components/SettingsPage';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { VideoStage } from './components/VideoStage';
@@ -10,7 +10,7 @@ import { useStudioController } from './hooks/useStudioController';
 export function App() {
   const studio = useStudioController();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<'studio' | 'settings'>('studio');
 
   // Spacebar play/pause shortcut (ignores form inputs & contentEditable word chips)
   useEffect(() => {
@@ -54,67 +54,81 @@ export function App() {
 
       <Topbar
         hasVideo={studio.hasVideo}
+        currentView={currentView}
+        onNavigate={(view) => setCurrentView(view)}
         onTriggerUpload={openFilePicker}
-        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSettings={() => setCurrentView('settings')}
         onExport={() => void studio.triggerExport()}
       />
 
-      <div className="workspace">
-        <VideoStage
-          videoRef={studio.videoRef}
-          canvasRef={studio.canvasRef}
-          hasVideo={studio.hasVideo}
-          isGeneratingDemo={studio.isGeneratingDemo}
-          isPlaying={studio.isPlaying}
-          isMuted={studio.isMuted}
-          isLooping={studio.isLooping}
-          currentTime={studio.currentTime}
-          duration={studio.duration}
-          loader={studio.loader}
-          onBrowseClick={openFilePicker}
-          onFileDrop={(file) => studio.loadVideoFile(file)}
-          onLoadDemo={() => void studio.handleLoadDemoVideo()}
-          onLoadedMetadata={studio.handleLoadedMetadata}
-          onTimeUpdate={studio.handleTimeUpdate}
-          onEnded={studio.handleVideoEnded}
-          onTogglePlay={studio.togglePlay}
-          onSeekPercent={studio.seekToPercent}
-          onToggleMute={studio.toggleMute}
-          onToggleLoop={studio.toggleLoop}
-        />
-
-        <Sidebar
-          hasVideo={studio.hasVideo}
-          wordCount={studio.wordCount}
-          activePreset={studio.activePreset}
-          styleConfig={studio.styleConfig}
-          useUppercase={studio.useUppercase}
-          useEmojis={studio.useEmojis}
-          transitionConfig={studio.transitionConfig}
-          segmenterStatus={studio.segmenterStatus}
+      {currentView === 'settings' ? (
+        <SettingsPage
+          onBack={() => setCurrentView('studio')}
           silenceEnabled={studio.silenceEnabled}
           silenceThreshold={studio.silenceThreshold}
-          jumpcutStats={studio.jumpcutStats}
-          segments={studio.segments}
-          activeSegmentId={studio.activeSegmentId}
-          activeWordId={studio.activeWordId}
-          captionLanguage={studio.captionLanguage}
-          multilingualModelSize={studio.multilingualModelSize}
-          onChangeLanguage={studio.handleChangeCaptionLanguage}
-          onSelectPreset={studio.applyPreset}
-          onUpdateStyle={studio.updateStyleParam}
-          onToggleUppercase={studio.toggleUppercase}
-          onToggleEmojis={studio.toggleEmojis}
-          onUpdateTransition={studio.updateTransition}
-          onPreviewTransition={studio.previewTransition}
+          groqApiKey={studio.groqApiKey}
           onToggleSilence={studio.handleToggleSilence}
           onChangeSilenceThreshold={studio.handleChangeSilenceThreshold}
-          onRunWhisper={() => void studio.runSpeechRecognition()}
-          onLoadSample={studio.loadSampleCaptions}
-          onSeek={studio.seekToTime}
-          onWordChange={studio.updateWordText}
+          onUpdateGroqApiKey={studio.handleUpdateGroqApiKey}
         />
-      </div>
+      ) : (
+        <div className="workspace">
+          <VideoStage
+            videoRef={studio.videoRef}
+            canvasRef={studio.canvasRef}
+            hasVideo={studio.hasVideo}
+            isGeneratingDemo={studio.isGeneratingDemo}
+            isPlaying={studio.isPlaying}
+            isMuted={studio.isMuted}
+            isLooping={studio.isLooping}
+            currentTime={studio.currentTime}
+            duration={studio.duration}
+            loader={studio.loader}
+            onBrowseClick={openFilePicker}
+            onFileDrop={(file) => studio.loadVideoFile(file)}
+            onLoadDemo={() => void studio.handleLoadDemoVideo()}
+            onLoadedMetadata={studio.handleLoadedMetadata}
+            onTimeUpdate={studio.handleTimeUpdate}
+            onEnded={studio.handleVideoEnded}
+            onTogglePlay={studio.togglePlay}
+            onSeekPercent={studio.seekToPercent}
+            onToggleMute={studio.toggleMute}
+            onToggleLoop={studio.toggleLoop}
+          />
+
+          <Sidebar
+            hasVideo={studio.hasVideo}
+            wordCount={studio.wordCount}
+            activePreset={studio.activePreset}
+            styleConfig={studio.styleConfig}
+            useUppercase={studio.useUppercase}
+            useEmojis={studio.useEmojis}
+            transitionConfig={studio.transitionConfig}
+            segmenterStatus={studio.segmenterStatus}
+            silenceEnabled={studio.silenceEnabled}
+            silenceThreshold={studio.silenceThreshold}
+            jumpcutStats={studio.jumpcutStats}
+            segments={studio.segments}
+            activeSegmentId={studio.activeSegmentId}
+            activeWordId={studio.activeWordId}
+            captionLanguage={studio.captionLanguage}
+            multilingualModelSize={studio.multilingualModelSize}
+            onChangeLanguage={studio.handleChangeCaptionLanguage}
+            onSelectPreset={studio.applyPreset}
+            onUpdateStyle={studio.updateStyleParam}
+            onToggleUppercase={studio.toggleUppercase}
+            onToggleEmojis={studio.toggleEmojis}
+            onUpdateTransition={studio.updateTransition}
+            onPreviewTransition={studio.previewTransition}
+            onToggleSilence={studio.handleToggleSilence}
+            onChangeSilenceThreshold={studio.handleChangeSilenceThreshold}
+            onRunWhisper={() => void studio.runSpeechRecognition()}
+            onLoadSample={studio.loadSampleCaptions}
+            onSeek={studio.seekToTime}
+            onWordChange={studio.updateWordText}
+          />
+        </div>
+      )}
 
       <ExportModal state={studio.exportModal} onClose={studio.closeExportModal} />
 
@@ -125,19 +139,6 @@ export function App() {
         onUpdateGroqApiKey={studio.handleUpdateGroqApiKey}
         onConfirm={studio.confirmLanguageAndTranscribe}
         onClose={studio.closeLanguagePrompt}
-      />
-
-      <SettingsModal
-        open={settingsOpen}
-        silenceEnabled={studio.silenceEnabled}
-        silenceThreshold={studio.silenceThreshold}
-        groqApiKey={studio.groqApiKey}
-        multilingualModelSize={studio.multilingualModelSize}
-        onClose={() => setSettingsOpen(false)}
-        onToggleSilence={studio.handleToggleSilence}
-        onChangeSilenceThreshold={studio.handleChangeSilenceThreshold}
-        onUpdateGroqApiKey={studio.handleUpdateGroqApiKey}
-        onChangeMultilingualModelSize={studio.handleChangeMultilingualModelSize}
       />
     </div>
   );
