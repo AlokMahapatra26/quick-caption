@@ -111,9 +111,9 @@ export function SettingsModal({
             </div>
             <div className="settings-row">
               <div className="settings-row-info">
-                <strong>Non-English Model Precision</strong>
+                <strong>Multilingual Model Precision</strong>
                 <p className="settings-row-desc">
-                  Model configuration for non-English transcription
+                  Model configuration for Hinglish and Hindi speech recognition
                 </p>
               </div>
               <select

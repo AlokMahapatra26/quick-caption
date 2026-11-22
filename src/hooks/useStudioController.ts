@@ -3,6 +3,7 @@ import { extract16kHzMonoAudio } from '../core/audioExtractor';
 import { generateSyntheticDemoVideo } from '../core/demoVideo';
 import { VideoExporter } from '../core/exporter';
 import {
+  DEMO_HINDI_WORDS,
   DEMO_HINGLISH_WORDS,
   hasDevanagari,
   toNaturalHinglish,
@@ -49,7 +50,7 @@ export interface ExportModalState {
 function getInitialLanguage(): CaptionLanguage {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('autocaption_caption_lang');
-    if (saved === 'english' || saved === 'hinglish') {
+    if (saved === 'english' || saved === 'hinglish' || saved === 'hindi') {
       return saved as CaptionLanguage;
     }
     const isLikelyIndian =
@@ -164,10 +165,12 @@ export function useStudioController() {
   const loadSampleCaptions = useCallback(() => {
     setLoader((prev) => ({ ...prev, visible: false }));
     nativeWordsRef.current = null;
-    const sample =
-      captionLanguageRef.current === 'english'
-        ? DEMO_SAMPLE_WORDS
-        : DEMO_HINGLISH_WORDS;
+    let sample = DEMO_SAMPLE_WORDS;
+    if (captionLanguageRef.current === 'hindi') {
+      sample = DEMO_HINDI_WORDS;
+    } else if (captionLanguageRef.current === 'hinglish') {
+      sample = DEMO_HINGLISH_WORDS;
+    }
     applyWords(sample);
   }, [applyWords]);
 
@@ -527,8 +530,17 @@ export function useStudioController() {
           applyWords(
             nativeWords.map((w) => ({ ...w, word: toNaturalHinglish(w.word) }))
           );
+        } else if (nextLang === 'hindi') {
+          applyWords(nativeWords.map((w) => ({ ...w, word: w.word })));
+        }
+      } else if (!currentFileRef.current) {
+        // If viewing sample captions, update words to match the newly selected language
+        if (nextLang === 'english') {
+          applyWords(DEMO_SAMPLE_WORDS);
+        } else if (nextLang === 'hindi') {
+          applyWords(DEMO_HINDI_WORDS);
         } else {
-          applyWords(nativeWords.map((w) => ({ ...w })));
+          applyWords(DEMO_HINGLISH_WORDS);
         }
       }
     },

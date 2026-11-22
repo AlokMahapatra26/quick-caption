@@ -3,7 +3,11 @@
  * Supports English (whisper-tiny.en ~39MB) and Hinglish / Hindi
  * (whisper-base ~75MB or whisper-small ~190MB) 100% locally in the browser.
  */
-import { DEMO_HINGLISH_WORDS, toNaturalHinglish } from './hinglish';
+import {
+  DEMO_HINDI_WORDS,
+  DEMO_HINGLISH_WORDS,
+  toNaturalHinglish,
+} from './hinglish';
 import { DEMO_SAMPLE_WORDS } from './presets';
 import type {
   CaptionLanguage,
@@ -47,24 +51,21 @@ const pipelineCache = new Map<string, TranscriberPipeline>();
 function resolveModelConfig(
   language: CaptionLanguage,
   modelSize: MultilingualModelSize
-): { modelId: string; sizeLabel: string; isMultilingual: boolean } {
+): { modelId: string; isMultilingual: boolean } {
   if (language === 'english') {
     return {
       modelId: 'Xenova/whisper-tiny.en',
-      sizeLabel: '39MB',
       isMultilingual: false,
     };
   }
   if (modelSize === 'small') {
     return {
       modelId: 'Xenova/whisper-small',
-      sizeLabel: '190MB',
       isMultilingual: true,
     };
   }
   return {
     modelId: 'Xenova/whisper-base',
-    sizeLabel: '75MB',
     isMultilingual: true,
   };
 }
@@ -171,7 +172,11 @@ workerSelf.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
   if (type !== 'TRANSCRIBE') return;
 
   const fallbackSample =
-    language === 'english' ? DEMO_SAMPLE_WORDS : DEMO_HINGLISH_WORDS;
+    language === 'english'
+      ? DEMO_SAMPLE_WORDS
+      : language === 'hindi'
+      ? DEMO_HINDI_WORDS
+      : DEMO_HINGLISH_WORDS;
 
   if (fallback || !audioData) {
     workerSelf.postMessage({
@@ -181,7 +186,7 @@ workerSelf.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
     return;
   }
 
-  const { modelId, sizeLabel, isMultilingual } = resolveModelConfig(
+  const { modelId, isMultilingual } = resolveModelConfig(
     language,
     modelSize
   );
@@ -189,19 +194,23 @@ workerSelf.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
   try {
     workerSelf.postMessage({
       type: 'STATUS',
-      message: `Loading ${modelId.replace('Xenova/', '')} (${sizeLabel})...`,
+      message: 'Loading speech recognition engine...',
     });
 
     const transcriber = await initPipeline(modelId, (percent) => {
       workerSelf.postMessage({ type: 'PROGRESS', percent });
     });
 
+    const statusMessage =
+      language === 'english'
+        ? 'Transcribing English speech...'
+        : language === 'hindi'
+        ? 'Transcribing Hindi speech...'
+        : 'Transcribing Hinglish speech...';
+
     workerSelf.postMessage({
       type: 'STATUS',
-      message:
-        language === 'english'
-          ? 'Transcribing English speech...'
-          : 'Transcribing Hinglish speech...',
+      message: statusMessage,
     });
 
     const options: TranscribeOptions = {

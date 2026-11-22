@@ -1,5 +1,5 @@
 import type { CaptionLanguage } from '../types/caption';
-import { CheckIcon, GlobeIcon, LanguageIcon } from './Icons';
+import { CheckIcon, GlobeIcon, LanguageIcon, ScriptIcon } from './Icons';
 
 interface LanguagePromptModalProps {
   open: boolean;
@@ -28,7 +28,7 @@ export function LanguagePromptModal({
           <div className="modal-title-group">
             <h3>Select Audio Language</h3>
             <p className="modal-subtitle">
-              Choose the primary language spoken in your video
+              Choose the spoken language for animated captions
             </p>
           </div>
           <button
@@ -62,7 +62,7 @@ export function LanguagePromptModal({
                 )}
               </div>
               <div className="lang-option-detail">
-                Standard English dialogue
+                Standard English dialogue and captions
               </div>
             </div>
           </button>
@@ -70,7 +70,7 @@ export function LanguagePromptModal({
           <button
             type="button"
             className={`lang-prompt-option${
-              selectedLanguage !== 'english' ? ' active' : ''
+              selectedLanguage === 'hinglish' ? ' active' : ''
             }`}
             onClick={() => onConfirm('hinglish')}
           >
@@ -79,15 +79,40 @@ export function LanguagePromptModal({
             </div>
             <div className="lang-option-text">
               <div className="lang-option-name">
-                Non-English
-                {selectedLanguage !== 'english' && (
+                Hinglish
+                {selectedLanguage === 'hinglish' && (
                   <span className="lang-active-check">
                     <CheckIcon size={12} />
                   </span>
                 )}
               </div>
               <div className="lang-option-detail">
-                Hinglish, Hindi, and 90+ global languages
+                Spoken Hindi written in English script (e.g. namaste doston)
+              </div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            className={`lang-prompt-option${
+              selectedLanguage === 'hindi' ? ' active' : ''
+            }`}
+            onClick={() => onConfirm('hindi')}
+          >
+            <div className="lang-option-icon-box">
+              <ScriptIcon size={18} />
+            </div>
+            <div className="lang-option-text">
+              <div className="lang-option-name">
+                Hindi
+                {selectedLanguage === 'hindi' && (
+                  <span className="lang-active-check">
+                    <CheckIcon size={12} />
+                  </span>
+                )}
+              </div>
+              <div className="lang-option-detail">
+                Native Devanagari script (e.g. नमस्ते दोस्तों)
               </div>
             </div>
           </button>

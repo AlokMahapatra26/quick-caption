@@ -5,7 +5,7 @@ import type {
   SubtitleSegment,
 } from '../types/caption';
 import { formatTime } from '../utils/formatTime';
-import { GlobeIcon, LanguageIcon, MicIcon } from './Icons';
+import { GlobeIcon, LanguageIcon, MicIcon, ScriptIcon } from './Icons';
 
 interface TranscriptCardProps {
   segment: SubtitleSegment;
@@ -75,7 +75,8 @@ interface TranscriptPanelProps {
 
 const LANGUAGE_OPTIONS = [
   { id: 'english' as const, label: 'English', icon: LanguageIcon },
-  { id: 'hinglish' as const, label: 'Non-English', icon: GlobeIcon },
+  { id: 'hinglish' as const, label: 'Hinglish', icon: GlobeIcon },
+  { id: 'hindi' as const, label: 'Hindi', icon: ScriptIcon },
 ];
 
 export function TranscriptPanel({
@@ -91,7 +92,7 @@ export function TranscriptPanel({
 }: TranscriptPanelProps) {
   return (
     <div className="tab-pane active">
-      {/* Speech Language Switcher: English | Non-English */}
+      {/* Speech Language Switcher: English | Hinglish | Hindi */}
       <div className="lang-segmented" role="group" aria-label="Caption Language">
         {LANGUAGE_OPTIONS.map((opt) => {
           const Icon = opt.icon;

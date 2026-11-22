@@ -27,7 +27,7 @@ export type PresetKey =
 export type AnimationType = 'bounce' | 'glow' | 'none';
 export type TextTransform = 'uppercase' | 'none' | 'capitalize';
 
-export type CaptionLanguage = 'english' | 'hinglish';
+export type CaptionLanguage = 'english' | 'hinglish' | 'hindi';
 export type MultilingualModelSize = 'base' | 'small';
 
 export type TransitionScope = 'all' | 'emphasized';
