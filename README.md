@@ -99,3 +99,4 @@ AutoCaption Studio does not transmit your video, audio, or metadata to any remot
 ## 📄 License
 
 MIT
+

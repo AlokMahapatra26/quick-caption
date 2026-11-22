@@ -42,7 +42,7 @@ export function App() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="video/mp4,video/webm,video/quicktime"
+        accept="video/*,.mp4,.webm,.mov,.m4v,.mkv,.avi"
         hidden
         onChange={(e) => {
           const file = e.target.files?.[0];

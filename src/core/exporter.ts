@@ -38,8 +38,10 @@ export class VideoExporter {
     const originalTime = this.video.currentTime;
     const wasPlaying = !this.video.paused;
     const wasLooping = this.video.loop;
+    const wasMuted = this.video.muted;
     this.video.loop = false;
     this.video.pause();
+    this.video.muted = false;
 
     let interval: ReturnType<typeof setInterval> | null = null;
 
@@ -53,6 +55,7 @@ export class VideoExporter {
         const videoStream = captureFn.call(this.video);
         const audioTracks = videoStream.getAudioTracks();
         if (audioTracks.length > 0) {
+          audioTracks[0].enabled = true;
           combinedStream = new MediaStream([
             ...canvasStream.getVideoTracks(),
             audioTracks[0],
@@ -124,6 +127,7 @@ export class VideoExporter {
       onProgress(100);
 
       this.video.loop = wasLooping;
+      this.video.muted = wasMuted;
       this.video.currentTime = originalTime;
       if (wasPlaying) void this.video.play();
       this.isExporting = false;
@@ -133,6 +137,7 @@ export class VideoExporter {
       if (interval) clearInterval(interval);
       this.isExporting = false;
       this.video.loop = wasLooping;
+      this.video.muted = wasMuted;
       this.video.currentTime = originalTime;
       throw err;
     }

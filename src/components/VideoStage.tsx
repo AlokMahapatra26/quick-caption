@@ -73,8 +73,13 @@ export function VideoStage({
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('video/')) {
-      onFileDrop(file);
+    if (file) {
+      const isVideo =
+        file.type.startsWith('video/') ||
+        /\.(mp4|webm|mov|m4v|mkv|avi|quicktime)$/i.test(file.name);
+      if (isVideo) {
+        onFileDrop(file);
+      }
     }
   };
 

@@ -593,12 +593,16 @@ export function useStudioController() {
     const exporter = exporterRef.current;
     if (!exporter) return;
 
+    const rawName = currentFileRef.current?.name ?? 'video';
+    const baseName = rawName.replace(/\.[^/.]+$/, '');
+    const initialFilename = `${baseName}-captioned.mp4`;
+
     setExportModal({
       open: true,
       progress: 0,
       statusDesc: 'Burning animated captions onto video frames locally...',
       downloadUrl: null,
-      downloadFilename: 'captioned-video.mp4',
+      downloadFilename: initialFilename,
       error: null,
     });
 
@@ -617,7 +621,7 @@ export function useStudioController() {
         progress: 100,
         statusDesc: 'Export complete! Your video is ready for download.',
         downloadUrl: result.url,
-        downloadFilename: `captioned-video.${result.extension}`,
+        downloadFilename: `${baseName}-captioned.${result.extension}`,
         error: null,
       });
     } catch (err) {

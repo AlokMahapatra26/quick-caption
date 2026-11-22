@@ -88,10 +88,32 @@ export function SettingsModal({
             <div className="mono-eyebrow mb-2">SPEECH &amp; PERFORMANCE</div>
             <div className="settings-row">
               <div className="settings-row-info">
+                <strong>AI Acceleration</strong>
+                <p className="settings-row-desc">
+                  {typeof navigator !== 'undefined' && 'gpu' in navigator
+                    ? 'WebGPU hardware acceleration active (GPU-powered)'
+                    : 'WebAssembly CPU mode active (Thread-capped)'}
+                </p>
+              </div>
+              <span
+                className="badge-pill"
+                style={{
+                  color:
+                    typeof navigator !== 'undefined' && 'gpu' in navigator
+                      ? 'var(--accent-blue, #0070f3)'
+                      : 'var(--text-muted, #71717a)',
+                }}
+              >
+                {typeof navigator !== 'undefined' && 'gpu' in navigator
+                  ? '⚡ WebGPU Active'
+                  : 'WASM CPU'}
+              </span>
+            </div>
+            <div className="settings-row">
+              <div className="settings-row-info">
                 <strong>Hinglish / Hindi Model</strong>
                 <p className="settings-row-desc">
-                  Cached locally after first download (English always uses 39MB
-                  tiny.en)
+                  Cached in browser storage after first download (English uses 39MB tiny.en)
                 </p>
               </div>
               <select
@@ -104,7 +126,7 @@ export function SettingsModal({
                 }
               >
                 <option value="base">Whisper Base (~75MB • Fast)</option>
-                <option value="small">Whisper Small (~190MB • Best)</option>
+                <option value="small">Whisper Small (~190MB • 8GB+ RAM)</option>
               </select>
             </div>
             <div className="settings-row">
