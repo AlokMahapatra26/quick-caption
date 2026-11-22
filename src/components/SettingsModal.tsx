@@ -1,3 +1,8 @@
+import {
+  formatAudioSeconds,
+  GROQ_LIMITS,
+  useGroqUsage,
+} from '../core/groqUsage';
 import type { MultilingualModelSize } from '../types/caption';
 import { SettingsIcon } from './Icons';
 
@@ -24,6 +29,8 @@ export function SettingsModal({
   onChangeSilenceThreshold,
   onUpdateGroqApiKey,
 }: SettingsModalProps) {
+  const groqUsage = useGroqUsage();
+
   if (!open) return null;
 
   return (
@@ -141,6 +148,61 @@ export function SettingsModal({
                 </a>
                 . Saved securely in your local browser storage.
               </span>
+            </div>
+
+            {/* Live Daily Quota & Usage Meter */}
+            <div className="groq-usage-card">
+              <div className="groq-usage-header">
+                <span className="groq-usage-title">Daily Free Quota</span>
+                <span className="groq-usage-pct">
+                  {Math.max(
+                    0,
+                    100 -
+                      Math.round(
+                        (groqUsage.audioSecondsUsedToday /
+                          GROQ_LIMITS.DAILY_AUDIO_SECONDS) *
+                          1000
+                      ) /
+                        10
+                  )}% available
+                </span>
+              </div>
+              <div className="groq-progress-track">
+                <div
+                  className="groq-progress-bar"
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      Math.max(
+                        2,
+                        (groqUsage.audioSecondsUsedToday /
+                          GROQ_LIMITS.DAILY_AUDIO_SECONDS) *
+                          100
+                      )
+                    )}%`,
+                  }}
+                />
+              </div>
+              <div className="groq-usage-stats-grid">
+                <div className="groq-stat-item">
+                  <span className="groq-stat-val">
+                    {formatAudioSeconds(groqUsage.audioSecondsUsedToday)} / 8h
+                  </span>
+                  <span className="groq-stat-lbl">Audio Used Today</span>
+                </div>
+                <div className="groq-stat-item">
+                  <span className="groq-stat-val">
+                    {groqUsage.remainingDailyRequests} / 2,000
+                  </span>
+                  <span className="groq-stat-lbl">Requests Left</span>
+                </div>
+              </div>
+              <div className="groq-usage-footer">
+                <span>Resets daily at 00:00 UTC</span>
+                {groqUsage.resetTime && (
+                  <span>Reset in: {groqUsage.resetTime}</span>
+                )}
+              </div>
             </div>
           </div>
 

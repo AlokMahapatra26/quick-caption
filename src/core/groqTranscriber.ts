@@ -1,4 +1,5 @@
 import type { RawWord } from '../types/caption';
+import { recordGroqTranscription } from './groqUsage';
 import { toNaturalHinglish } from './hinglish';
 
 /**
@@ -149,6 +150,15 @@ export async function transcribeWithGroq(
 
   const data: GroqVerboseResponse = await response.json();
 
+  // Record live usage & read rate-limit headers
+  const remainingHdr = response.headers.get('x-ratelimit-remaining-requests');
+  const resetHdr = response.headers.get('x-ratelimit-reset-requests');
+  const durationSec = data.duration || Math.round(audioData.length / 16000);
+  recordGroqTranscription(durationSec, {
+    remainingRequests: remainingHdr,
+    resetRequests: resetHdr,
+  });
+
   onStatus?.('Formatting Hinglish captions...');
   let words: RawWord[] = [];
 
@@ -189,3 +199,4 @@ export async function transcribeWithGroq(
 
   return words;
 }
+

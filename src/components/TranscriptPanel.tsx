@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { useGroqUsage } from '../core/groqUsage';
 import type {
   CaptionLanguage,
   SubtitleSegment,
@@ -82,11 +83,24 @@ export function TranscriptPanel({
   onSeek,
   onWordChange,
 }: TranscriptPanelProps) {
+  const groqUsage = useGroqUsage();
+
   return (
     <div className="tab-pane active">
       {/* Speech Language Mode Switcher */}
       <div className="transcript-script-header">
-        <span className="script-header-title">Speech Language</span>
+        <div className="script-header-row">
+          <span className="script-header-title">Speech Language</span>
+          {captionLanguage === 'hinglish' && (
+            <span
+              className="groq-quota-pill"
+              title="Groq Whisper Large v3 daily remaining requests"
+            >
+              <span className="quota-dot" />
+              {groqUsage.remainingDailyRequests} left today
+            </span>
+          )}
+        </div>
         <div
           className="script-segmented"
           role="radiogroup"

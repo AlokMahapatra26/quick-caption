@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useGroqUsage } from '../core/groqUsage';
 import type { CaptionLanguage } from '../types/caption';
 import { CheckIcon, GlobeIcon, KeyIcon, LanguageIcon } from './Icons';
 
@@ -21,6 +22,7 @@ export function LanguagePromptModal({
 }: LanguagePromptModalProps) {
   const [apiKeyInput, setApiKeyInput] = useState(groqApiKey);
   const [showKeyInput, setShowKeyInput] = useState(false);
+  const groqUsage = useGroqUsage();
 
   if (!open) return null;
 
@@ -113,6 +115,9 @@ export function LanguagePromptModal({
               </div>
               <div className="lang-option-detail">
                 Studio-grade code-mixed Hindi &amp; English in Roman alphabet
+                {groqApiKey.trim() && (
+                  <span> • {groqUsage.remainingDailyRequests} free left today</span>
+                )}
               </div>
             </div>
           </button>
