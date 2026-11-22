@@ -105,15 +105,15 @@ export function SettingsModal({
                 }}
               >
                 {typeof navigator !== 'undefined' && 'gpu' in navigator
-                  ? '⚡ WebGPU Active'
-                  : 'WASM CPU'}
+                  ? 'WebGPU Active'
+                  : 'CPU Mode'}
               </span>
             </div>
             <div className="settings-row">
               <div className="settings-row-info">
-                <strong>Non-English Model Size</strong>
+                <strong>Non-English Model Precision</strong>
                 <p className="settings-row-desc">
-                  Used when Non-English is selected (English always uses 39MB tiny.en)
+                  Model configuration for non-English transcription
                 </p>
               </div>
               <select
@@ -125,8 +125,8 @@ export function SettingsModal({
                   )
                 }
               >
-                <option value="base">Whisper Base (~75MB • Fast)</option>
-                <option value="small">Whisper Small (~190MB • 8GB+ RAM)</option>
+                <option value="base">Standard (Fast)</option>
+                <option value="small">High Precision (8GB+ RAM)</option>
               </select>
             </div>
             <div className="settings-row">

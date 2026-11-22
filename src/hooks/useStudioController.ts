@@ -101,6 +101,7 @@ export function useStudioController() {
 
   const [segments, setSegments] = useState<SubtitleSegment[]>([]);
   const [wordCount, setWordCount] = useState(0);
+  const [languagePromptOpen, setLanguagePromptOpen] = useState(false);
   const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
   const [activeWordId, setActiveWordId] = useState<string | null>(null);
   const [captionLanguage, setCaptionLanguage] =
@@ -259,48 +260,70 @@ export function useStudioController() {
     };
   }, [applyWords]);
 
-  const runSpeechRecognition = useCallback(async () => {
-    const file = currentFileRef.current;
-    if (!file) {
-      loadSampleCaptions();
-      return;
-    }
+  const runSpeechRecognition = useCallback(
+    async (overrideLanguage?: CaptionLanguage) => {
+      const file = currentFileRef.current;
+      if (!file) {
+        loadSampleCaptions();
+        return;
+      }
 
-    setLoader({
-      visible: true,
-      text: 'Extracting 16kHz audio from video...',
-      progress: 5,
-    });
+      const activeLang = overrideLanguage ?? captionLanguageRef.current;
 
-    try {
-      const audioResult = await extract16kHzMonoAudio(file, (pct, msg) => {
-        setLoader({ visible: true, text: msg, progress: pct });
+      setLoader({
+        visible: true,
+        text: 'Extracting 16kHz audio from video...',
+        progress: 5,
       });
 
-      setLoader((prev) => ({
-        ...prev,
-        text: 'Transcribing with Whisper AI...',
-      }));
+      try {
+        const audioResult = await extract16kHzMonoAudio(file, (pct, msg) => {
+          setLoader({ visible: true, text: msg, progress: pct });
+        });
 
-      if (workerRef.current) {
-        // Zero-copy transfer of the Float32Array buffer to the Web Worker
-        workerRef.current.postMessage(
-          {
-            type: 'TRANSCRIBE',
-            audioData: audioResult.audioData,
-            language: captionLanguageRef.current,
-            modelSize: multilingualModelSizeRef.current,
-          },
-          [audioResult.audioData.buffer]
-        );
-      } else {
+        setLoader((prev) => ({
+          ...prev,
+          text: 'Transcribing with Whisper AI...',
+        }));
+
+        if (workerRef.current) {
+          // Zero-copy transfer of the Float32Array buffer to the Web Worker
+          workerRef.current.postMessage(
+            {
+              type: 'TRANSCRIBE',
+              audioData: audioResult.audioData,
+              language: activeLang,
+              modelSize: multilingualModelSizeRef.current,
+            },
+            [audioResult.audioData.buffer]
+          );
+        } else {
+          loadSampleCaptions();
+        }
+      } catch (err) {
+        console.warn('Audio extraction notice, loading sample words:', err);
         loadSampleCaptions();
       }
-    } catch (err) {
-      console.warn('Audio extraction notice, loading sample words:', err);
-      loadSampleCaptions();
-    }
-  }, [loadSampleCaptions]);
+    },
+    [loadSampleCaptions]
+  );
+
+  const confirmLanguageAndTranscribe = useCallback(
+    (lang: CaptionLanguage) => {
+      captionLanguageRef.current = lang;
+      setCaptionLanguage(lang);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('autocaption_caption_lang', lang);
+      }
+      setLanguagePromptOpen(false);
+      void runSpeechRecognition(lang);
+    },
+    [runSpeechRecognition]
+  );
+
+  const closeLanguagePrompt = useCallback(() => {
+    setLanguagePromptOpen(false);
+  }, []);
 
   const loadVideoFile = useCallback(
     (file: File, options: { autoTranscribe?: boolean } = {}) => {
@@ -345,9 +368,9 @@ export function useStudioController() {
       skipAutoTranscribeRef.current = false;
       loadSampleCaptions();
     } else {
-      void runSpeechRecognition();
+      setLanguagePromptOpen(true);
     }
-  }, [loadSampleCaptions, runSpeechRecognition, startRenderLoop]);
+  }, [loadSampleCaptions, startRenderLoop]);
 
   const handleLoadDemoVideo = useCallback(async () => {
     if (isGeneratingDemo) return;
@@ -705,6 +728,10 @@ export function useStudioController() {
     runSpeechRecognition,
     loadSampleCaptions,
     updateWordText,
+    // Language Selection Modal
+    languagePromptOpen,
+    confirmLanguageAndTranscribe,
+    closeLanguagePrompt,
     // Silence Remover
     silenceEnabled,
     silenceThreshold,

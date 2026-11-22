@@ -5,7 +5,7 @@ import type {
   SubtitleSegment,
 } from '../types/caption';
 import { formatTime } from '../utils/formatTime';
-import { MicIcon } from './Icons';
+import { GlobeIcon, LanguageIcon, MicIcon } from './Icons';
 
 interface TranscriptCardProps {
   segment: SubtitleSegment;
@@ -73,9 +73,9 @@ interface TranscriptPanelProps {
   onWordChange: (wordId: string, text: string) => void;
 }
 
-const LANGUAGE_OPTIONS: { id: CaptionLanguage; label: string }[] = [
-  { id: 'english', label: '⚡ English (39MB)' },
-  { id: 'hinglish', label: '🌐 Non-English (75MB)' },
+const LANGUAGE_OPTIONS = [
+  { id: 'english' as const, label: 'English', icon: LanguageIcon },
+  { id: 'hinglish' as const, label: 'Non-English', icon: GlobeIcon },
 ];
 
 export function TranscriptPanel({
@@ -83,34 +83,30 @@ export function TranscriptPanel({
   activeSegmentId,
   activeWordId,
   captionLanguage,
-  multilingualModelSize,
   onChangeLanguage,
   onRunWhisper,
   onLoadSample,
   onSeek,
   onWordChange,
 }: TranscriptPanelProps) {
-  const modelSizeHint =
-    captionLanguage === 'english'
-      ? '39MB'
-      : multilingualModelSize === 'small'
-        ? '190MB'
-        : '75MB';
-
   return (
     <div className="tab-pane active">
-      {/* Speech Language Switcher: Hinglish | English | Hindi */}
+      {/* Speech Language Switcher: English | Non-English */}
       <div className="lang-segmented" role="group" aria-label="Caption Language">
-        {LANGUAGE_OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            className={`lang-seg-btn${captionLanguage === opt.id ? ' active' : ''}`}
-            onClick={() => onChangeLanguage(opt.id)}
-          >
-            {opt.label}
-          </button>
-        ))}
+        {LANGUAGE_OPTIONS.map((opt) => {
+          const Icon = opt.icon;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              className={`lang-seg-btn${captionLanguage === opt.id ? ' active' : ''}`}
+              onClick={() => onChangeLanguage(opt.id)}
+            >
+              <Icon size={13} />
+              <span>{opt.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="transcript-header-actions">
@@ -120,7 +116,7 @@ export function TranscriptPanel({
           onClick={onRunWhisper}
         >
           <MicIcon />
-          Transcribe ({modelSizeHint})
+          Transcribe Speech
         </button>
         <button
           type="button"

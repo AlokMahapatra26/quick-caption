@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import type { DragEvent, RefObject } from 'react';
 import type { LoaderState } from '../hooks/useStudioController';
-import type { CaptionLanguage } from '../types/caption';
 import { formatTime } from '../utils/formatTime';
 import {
   CloudUploadIcon,
@@ -24,8 +23,6 @@ interface VideoStageProps {
   currentTime: number;
   duration: number;
   loader: LoaderState;
-  captionLanguage: CaptionLanguage;
-  onSelectLanguage: (lang: CaptionLanguage) => void;
   onBrowseClick: () => void;
   onFileDrop: (file: File) => void;
   onLoadDemo: () => void;
@@ -49,8 +46,6 @@ export function VideoStage({
   currentTime,
   duration,
   loader,
-  captionLanguage,
-  onSelectLanguage,
   onBrowseClick,
   onFileDrop,
   onLoadDemo,
@@ -117,51 +112,6 @@ export function VideoStage({
                 <span>9:16 VERTICAL</span>
                 <span>•</span>
                 <span>MP4 / MOV / WEBM</span>
-              </div>
-
-              <div className="dropzone-lang-card">
-                <div className="dropzone-lang-header">
-                  <span className="dropzone-lang-label">SPOKEN LANGUAGE</span>
-                  <span className="dropzone-lang-badge">
-                    {captionLanguage === 'english'
-                      ? '⚡ 39MB Instant'
-                      : '🌐 75MB Local'}
-                  </span>
-                </div>
-                <div
-                  className="dropzone-lang-group"
-                  role="group"
-                  aria-label="Spoken Language"
-                >
-                  <button
-                    type="button"
-                    className={`dropzone-lang-btn${
-                      captionLanguage === 'english' ? ' active' : ''
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectLanguage('english');
-                    }}
-                  >
-                    <span className="lang-btn-name">⚡ English</span>
-                    <span className="lang-btn-sub">Fastest • 39MB model</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`dropzone-lang-btn${
-                      captionLanguage !== 'english' ? ' active' : ''
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectLanguage('hinglish');
-                    }}
-                  >
-                    <span className="lang-btn-name">🌐 Non-English</span>
-                    <span className="lang-btn-sub">
-                      Hinglish &amp; 99 Lang • 75MB
-                    </span>
-                  </button>
-                </div>
               </div>
 
               <div className="dropzone-actions">
