@@ -6,7 +6,9 @@
 import {
   DEMO_HINDI_WORDS,
   DEMO_HINGLISH_WORDS,
+  hasArabicOrUrdu,
   toNaturalHinglish,
+  urduToDevanagari,
 } from './hinglish';
 import { DEMO_SAMPLE_WORDS } from './presets';
 import type {
@@ -136,8 +138,13 @@ function buildMergedWords(chunks: WhisperChunk[]): RawWord[] {
 
   for (const chunk of chunks) {
     const rawText = chunk.text ?? '';
-    const trimmed = rawText.trim();
+    let trimmed = rawText.trim();
     if (!trimmed) continue;
+
+    // If Whisper output any Urdu/Arabic script, immediately convert to standard Devanagari Hindi
+    if (hasArabicOrUrdu(trimmed)) {
+      trimmed = urduToDevanagari(trimmed);
+    }
 
     const start = chunk.timestamp[0] ?? 0;
     const end = chunk.timestamp[1] ?? start + 0.3;
@@ -240,6 +247,11 @@ workerSelf.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         ? nativeWords.map((w) => ({
             ...w,
             word: toNaturalHinglish(w.word),
+          }))
+        : language === 'hindi'
+        ? nativeWords.map((w) => ({
+            ...w,
+            word: urduToDevanagari(w.word),
           }))
         : nativeWords;
 

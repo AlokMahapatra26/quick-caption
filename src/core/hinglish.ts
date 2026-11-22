@@ -437,9 +437,276 @@ const VISARGA = 'ः';
 const DANDA = '।';
 
 const DEVANAGARI_REGEX = /[\u0900-\u097F]/;
+const ARABIC_URDU_REGEX = /[\u0600-\u06FF]/;
 
 export function hasDevanagari(text: string): boolean {
   return DEVANAGARI_REGEX.test(text);
+}
+
+export function hasArabicOrUrdu(text: string): boolean {
+  return ARABIC_URDU_REGEX.test(text);
+}
+
+export function hasIndicOrUrdu(text: string): boolean {
+  return DEVANAGARI_REGEX.test(text) || ARABIC_URDU_REGEX.test(text);
+}
+
+/**
+ * Common Urdu/Nastaliq words mapped to standard Hindi Devanagari.
+ * Spoken Hindi and Urdu share identical spoken vocabulary (Hindustani).
+ * When Whisper decodes Hindustani audio into Urdu script tokens,
+ * this dictionary converts them directly into proper Devanagari script.
+ */
+const URDU_TO_HINDI_DICT: Record<string, string> = {
+  'ایک': 'एक',
+  'دو': 'दो',
+  'تین': 'तीन',
+  'چار': 'चार',
+  'پانچ': 'पांच',
+  'گھونٹ': 'घूंट',
+  'گھونٹساں': 'घूंट',
+  'گلاس': 'गिलास',
+  'پانی': 'पानी',
+  'نے': 'ने',
+  'میں': 'में',
+  'ہے': 'है',
+  'ہیں': 'हैं',
+  'ہو': 'हो',
+  'ہوں': 'हूँ',
+  'تھا': 'था',
+  'تھی': 'थी',
+  'تھے': 'थे',
+  'کیا': 'क्या',
+  'کیوں': 'क्यों',
+  'کیسے': 'कैसे',
+  'کیسا': 'कैसा',
+  'کیسی': 'कैसी',
+  'یہ': 'यह',
+  'وہ': 'वह',
+  'اس': 'इस',
+  'اسے': 'इसे',
+  'اسکا': 'इसका',
+  'اسکی': 'इसकी',
+  'اسکے': 'इसके',
+  'ان': 'इन',
+  'انکا': 'इनका',
+  'انکی': 'इनकी',
+  'انکے': 'इनके',
+  'آپ': 'आप',
+  'آپکا': 'आपका',
+  'آپکی': 'आपकी',
+  'آپکے': 'आपके',
+  'آپکو': 'आपको',
+  'تم': 'तुम',
+  'تمہارا': 'तुम्हारा',
+  'تمہاری': 'तुम्हारी',
+  'تمہارے': 'तुम्हारे',
+  'تمہیں': 'तुम्हें',
+  'ہم': 'हम',
+  'ہمارا': 'हमारा',
+  'ہماری': 'हमारी',
+  'ہمارے': 'हमारे',
+  'ہمیں': 'हमें',
+  'میرا': 'मेरा',
+  'میری': 'मेरी',
+  'میرے': 'मेरे',
+  'مجھے': 'मुझे',
+  'مجھ': 'मुझ',
+  'ویڈیو': 'वीडियो',
+  'اور': 'और',
+  'یا': 'या',
+  'نہیں': 'नहीं',
+  'نہ': 'ना',
+  'مت': 'मत',
+  'ہاں': 'हाँ',
+  'جی': 'जी',
+  'بہت': 'बहुत',
+  'زیادہ': 'ज्यादा',
+  'کم': 'कम',
+  'بات': 'बात',
+  'باتیں': 'बातें',
+  'لوگ': 'लोग',
+  'لوگوں': 'लोगों',
+  'کام': 'काम',
+  'سب': 'सब',
+  'سبھی': 'सभी',
+  'اب': 'अब',
+  'ابھی': 'अभी',
+  'آج': 'आज',
+  'کل': 'कल',
+  'صرف': 'सिर्फ',
+  'بس': 'बस',
+  'دل': 'दिल',
+  'دنیا': 'दुनिया',
+  'وقت': 'वक्त',
+  'زندگی': 'जिंदगी',
+  'دوست': 'दोस्त',
+  'دوستوں': 'दोस्तों',
+  'بھائی': 'भाई',
+  'یار': 'यार',
+  'دیکھو': 'देखो',
+  'دیکھنا': 'देखना',
+  'دیکھا': 'देखा',
+  'سنو': 'सुनो',
+  'بولو': 'बोलो',
+  'کہو': 'कहो',
+  'کہا': 'कहा',
+  'شروع': 'शुरू',
+  'ختم': 'खत्म',
+  'صحیح': 'सही',
+  'غلط': 'गलत',
+  'پہلے': 'पहले',
+  'بعد': 'बाद',
+  'ساتھ': 'साथ',
+  'سے': 'से',
+  'کو': 'को',
+  'کا': 'का',
+  'کی': 'की',
+  'کے': 'के',
+  'پر': 'पर',
+  'تک': 'तक',
+  'اگر': 'अगर',
+  'تو': 'तो',
+  'بھی': 'भी',
+  'ہی': 'ही',
+  'کچھ': 'कुछ',
+  'کوئی': 'कोई',
+  'کون': 'कौन',
+  'کس': 'किस',
+  'کسے': 'किसे',
+  'پھر': 'फिर',
+  'ضرور': 'जरूर',
+  'ضروری': 'जरूरी',
+  'چاہئے': 'चाहिए',
+  'چاہیے': 'चाहिए',
+  'سکتے': 'सकते',
+  'سکتا': 'सकता',
+  'سکتی': 'सकती',
+  'کر': 'कर',
+  'کرو': 'करो',
+  'کرنا': 'करना',
+  'کرتے': 'करते',
+  'کرتا': 'करता',
+  'کرتی': 'करती',
+  'کریں گے': 'करेंगे',
+  'کیا گیا': 'किया गया',
+  'ہوگا': 'होगा',
+  'ہوگی': 'होगी',
+  'ہوں گے': 'होंगे',
+  'ہوا': 'हुआ',
+  'ہوئی': 'हुई',
+  'ہوئے': 'हुए',
+  'آیا': 'आया',
+  'آئی': 'आई',
+  'آئے': 'आए',
+  'گیا': 'गया',
+  'گئی': 'गई',
+  'گئے': 'गए',
+  'دیا': 'दिया',
+  'لیا': 'लिया',
+  'پیو': 'पियो',
+  'پینا': 'पीना',
+  'کھاؤ': 'खाओ',
+};
+
+const URDU_CHAR_TO_DEVANAGARI: Record<string, string> = {
+  'ا': 'ा',
+  'آ': 'आ',
+  'ب': 'ब',
+  'پ': 'प',
+  'ت': 'त',
+  'ٹ': 'ट',
+  'ث': 'स',
+  'ج': 'ज',
+  'چ': 'च',
+  'ح': 'ह',
+  'خ': 'ख़',
+  'د': 'द',
+  'ڈ': 'ड',
+  'ذ': 'ज़',
+  'ر': 'र',
+  'ڑ': 'ड़',
+  'ز': 'ज़',
+  'ژ': 'झ़',
+  'س': 'स',
+  'ش': 'श',
+  'ص': 'स',
+  'ض': 'ज़',
+  'ط': 'त',
+  'ظ': 'ज़',
+  'ع': 'अ',
+  'غ': 'ग़',
+  'ف': 'फ़',
+  'ق': 'क़',
+  'ک': 'क',
+  'گ': 'ग',
+  'ل': 'ल',
+  'م': 'म',
+  'ن': 'न',
+  'ں': 'ँ',
+  'و': 'ो',
+  'ہ': 'ह',
+  'ۂ': 'ह',
+  'ھ': 'ह',
+  'ی': 'ी',
+  'ے': 'े',
+  'ئ': 'ई',
+  'ء': '',
+};
+
+/**
+ * Converts any Perso-Arabic / Urdu script text into clean standard Hindi Devanagari.
+ */
+export function urduToDevanagari(text: string): string {
+  if (!text || !hasArabicOrUrdu(text)) return text;
+
+  return text
+    .split(/(\s+)/)
+    .map((part) => {
+      if (!hasArabicOrUrdu(part)) return part;
+
+      const match = part.match(
+        /^([^\u0600-\u06FF]*)([\u0600-\u06FF]+)([^\u0600-\u06FF]*)$/
+      );
+      if (!match) return part;
+
+      const [, lead, core, trail] = match;
+
+      // Exact high-frequency Hindustani word match
+      if (URDU_TO_HINDI_DICT[core]) {
+        return `${lead}${URDU_TO_HINDI_DICT[core]}${trail}`;
+      }
+
+      // Handle common aspirated digraphs (do-chashmi he compounds)
+      const c = core
+        .replace(/بھ/g, 'भ')
+        .replace(/پھ/g, 'फ')
+        .replace(/تھ/g, 'थ')
+        .replace(/ٹھ/g, 'ठ')
+        .replace(/جھ/g, 'झ')
+        .replace(/چھ/g, 'छ')
+        .replace(/دھ/g, 'ध')
+        .replace(/ڈھ/g, 'ढ')
+        .replace(/کھ/g, 'ख')
+        .replace(/گھ/g, 'घ')
+        .replace(/ڑھ/g, 'ढ़');
+
+      let out = '';
+      const chars = [...c];
+      for (let i = 0; i < chars.length; i++) {
+        const ch = chars[i];
+        if (i === 0 && ch === 'ا') {
+          out += 'अ';
+        } else if (URDU_CHAR_TO_DEVANAGARI[ch] !== undefined) {
+          out += URDU_CHAR_TO_DEVANAGARI[ch];
+        } else {
+          out += ch;
+        }
+      }
+
+      return `${lead}${out}${trail}`;
+    })
+    .join('');
 }
 
 /**
@@ -529,13 +796,16 @@ function transliterateDevanagariWord(word: string): string {
 }
 
 /**
- * Converts a Devanagari / mixed Hindi-English word or phrase into clean natural Hinglish.
+ * Converts a Devanagari or Urdu word or phrase into clean natural Hinglish (Latin alphabet).
  * Preserves surrounding punctuation (commas, exclamation marks, quotes).
  */
 export function toNaturalHinglish(text: string): string {
-  if (!text || !hasDevanagari(text)) return text;
+  if (!text || (!hasDevanagari(text) && !hasArabicOrUrdu(text))) return text;
 
-  return text
+  // If text contains any Urdu/Arabic script, normalize it to Devanagari first
+  const normalizedText = hasArabicOrUrdu(text) ? urduToDevanagari(text) : text;
+
+  return normalizedText
     .replace(/।/g, '.')
     .split(/(\s+)/)
     .map((part) => {

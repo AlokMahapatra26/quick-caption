@@ -5,8 +5,9 @@ import { VideoExporter } from '../core/exporter';
 import {
   DEMO_HINDI_WORDS,
   DEMO_HINGLISH_WORDS,
-  hasDevanagari,
+  hasIndicOrUrdu,
   toNaturalHinglish,
+  urduToDevanagari,
 } from '../core/hinglish';
 import {
   PersonSegmenter,
@@ -519,19 +520,21 @@ export function useStudioController() {
         localStorage.setItem('autocaption_caption_lang', nextLang);
       }
 
-      // Instantly switch script if we already have native words with Devanagari
+      // Instantly switch script if we already have native words with Devanagari or Urdu
       const nativeWords = nativeWordsRef.current;
       if (
         nativeWords &&
         nativeWords.length > 0 &&
-        nativeWords.some((w) => hasDevanagari(w.word))
+        nativeWords.some((w) => hasIndicOrUrdu(w.word))
       ) {
         if (nextLang === 'hinglish') {
           applyWords(
             nativeWords.map((w) => ({ ...w, word: toNaturalHinglish(w.word) }))
           );
         } else if (nextLang === 'hindi') {
-          applyWords(nativeWords.map((w) => ({ ...w, word: w.word })));
+          applyWords(
+            nativeWords.map((w) => ({ ...w, word: urduToDevanagari(w.word) }))
+          );
         }
       } else if (!currentFileRef.current) {
         // If viewing sample captions, update words to match the newly selected language
