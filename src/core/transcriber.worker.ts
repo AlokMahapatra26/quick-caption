@@ -83,6 +83,7 @@ async function initPipeline(
       model: string,
       opts: {
         quantized?: boolean;
+        device?: string;
         progress_callback?: (p: {
           status: string;
           loaded?: number;
@@ -99,14 +100,39 @@ async function initPipeline(
   mod.env.allowLocalModels = false;
   mod.env.useBrowserCache = true;
 
-  const instance = await mod.pipeline('automatic-speech-recognition', modelId, {
-    quantized: true,
-    progress_callback: (p) => {
-      if (p.status === 'progress' && p.loaded && p.total) {
-        onProgress(Math.round((p.loaded / p.total) * 100));
-      }
-    },
-  });
+  // Cap CPU worker threads so the browser/desktop UI thread always has 1-2 dedicated cores free
+  const envAny = mod.env as unknown as {
+    backends?: { onnx?: { wasm?: { numThreads?: number } } };
+  };
+  if (envAny?.backends?.onnx?.wasm) {
+    const totalCores =
+      typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 4 : 4;
+    envAny.backends.onnx.wasm.numThreads = Math.max(1, Math.min(4, totalCores - 2));
+  }
+
+  let instance: TranscriberPipeline;
+  try {
+    // Attempt GPU hardware acceleration first via WebGPU
+    instance = await mod.pipeline('automatic-speech-recognition', modelId, {
+      quantized: true,
+      device: 'webgpu',
+      progress_callback: (p) => {
+        if (p.status === 'progress' && p.loaded && p.total) {
+          onProgress(Math.round((p.loaded / p.total) * 100));
+        }
+      },
+    });
+  } catch {
+    // Fall back gracefully to CPU WebAssembly with capped threads
+    instance = await mod.pipeline('automatic-speech-recognition', modelId, {
+      quantized: true,
+      progress_callback: (p) => {
+        if (p.status === 'progress' && p.loaded && p.total) {
+          onProgress(Math.round((p.loaded / p.total) * 100));
+        }
+      },
+    });
+  }
 
   pipelineCache.set(modelId, instance);
   return instance;
