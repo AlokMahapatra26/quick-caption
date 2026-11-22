@@ -10,7 +10,35 @@ import { useStudioController } from './hooks/useStudioController';
 export function App() {
   const studio = useStudioController();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [currentView, setCurrentView] = useState<'studio' | 'settings'>('studio');
+  const [currentView, setCurrentView] = useState<'studio' | 'settings'>(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#settings') {
+      return 'settings';
+    }
+    return 'studio';
+  });
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#settings') {
+        setCurrentView('settings');
+      } else {
+        setCurrentView('studio');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const navigateTo = (view: 'studio' | 'settings') => {
+    setCurrentView(view);
+    if (typeof window !== 'undefined') {
+      if (view === 'settings') {
+        window.location.hash = '#settings';
+      } else if (window.location.hash === '#settings') {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }
+  };
 
   // Spacebar play/pause shortcut (ignores form inputs & contentEditable word chips)
   useEffect(() => {
@@ -55,15 +83,15 @@ export function App() {
       <Topbar
         hasVideo={studio.hasVideo}
         currentView={currentView}
-        onNavigate={(view) => setCurrentView(view)}
+        onNavigate={navigateTo}
         onTriggerUpload={openFilePicker}
-        onOpenSettings={() => setCurrentView('settings')}
+        onOpenSettings={() => navigateTo('settings')}
         onExport={() => void studio.triggerExport()}
       />
 
       {currentView === 'settings' ? (
         <SettingsPage
-          onBack={() => setCurrentView('studio')}
+          onBack={() => navigateTo('studio')}
           silenceEnabled={studio.silenceEnabled}
           silenceThreshold={studio.silenceThreshold}
           groqApiKey={studio.groqApiKey}
