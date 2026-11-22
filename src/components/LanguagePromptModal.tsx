@@ -26,9 +26,9 @@ export function LanguagePromptModal({
       <div className="modal-card lang-prompt-card">
         <div className="modal-header">
           <div className="modal-title-group">
-            <h3>Select Audio Language</h3>
+            <h3>Select Language &amp; Script</h3>
             <p className="modal-subtitle">
-              Choose the spoken language for animated captions
+              Choose your audio language and caption writing script
             </p>
           </div>
           <button
@@ -42,6 +42,56 @@ export function LanguagePromptModal({
         </div>
 
         <div className="lang-prompt-options">
+          <button
+            type="button"
+            className={`lang-prompt-option${
+              selectedLanguage === 'hinglish' ? ' active' : ''
+            }`}
+            onClick={() => onConfirm('hinglish')}
+          >
+            <div className="lang-option-icon-box">
+              <GlobeIcon size={18} />
+            </div>
+            <div className="lang-option-text">
+              <div className="lang-option-name">
+                Latin Script (Hinglish)
+                {selectedLanguage === 'hinglish' && (
+                  <span className="lang-active-check">
+                    <CheckIcon size={12} />
+                  </span>
+                )}
+              </div>
+              <div className="lang-option-detail">
+                Spoken Hindi written in English letters (e.g. namaste doston)
+              </div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            className={`lang-prompt-option${
+              selectedLanguage === 'hindi' ? ' active' : ''
+            }`}
+            onClick={() => onConfirm('hindi')}
+          >
+            <div className="lang-option-icon-box">
+              <ScriptIcon size={18} />
+            </div>
+            <div className="lang-option-text">
+              <div className="lang-option-name">
+                Devanagari Script (Hindi)
+                {selectedLanguage === 'hindi' && (
+                  <span className="lang-active-check">
+                    <CheckIcon size={12} />
+                  </span>
+                )}
+              </div>
+              <div className="lang-option-detail">
+                Spoken Hindi written in native Devanagari script (e.g. नमस्ते दोस्तों)
+              </div>
+            </div>
+          </button>
+
           <button
             type="button"
             className={`lang-prompt-option${
@@ -63,56 +113,6 @@ export function LanguagePromptModal({
               </div>
               <div className="lang-option-detail">
                 Standard English dialogue and captions
-              </div>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={`lang-prompt-option${
-              selectedLanguage === 'hinglish' ? ' active' : ''
-            }`}
-            onClick={() => onConfirm('hinglish')}
-          >
-            <div className="lang-option-icon-box">
-              <GlobeIcon size={18} />
-            </div>
-            <div className="lang-option-text">
-              <div className="lang-option-name">
-                Hinglish
-                {selectedLanguage === 'hinglish' && (
-                  <span className="lang-active-check">
-                    <CheckIcon size={12} />
-                  </span>
-                )}
-              </div>
-              <div className="lang-option-detail">
-                Spoken Hindi written in English script (e.g. namaste doston)
-              </div>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={`lang-prompt-option${
-              selectedLanguage === 'hindi' ? ' active' : ''
-            }`}
-            onClick={() => onConfirm('hindi')}
-          >
-            <div className="lang-option-icon-box">
-              <ScriptIcon size={18} />
-            </div>
-            <div className="lang-option-text">
-              <div className="lang-option-name">
-                Hindi
-                {selectedLanguage === 'hindi' && (
-                  <span className="lang-active-check">
-                    <CheckIcon size={12} />
-                  </span>
-                )}
-              </div>
-              <div className="lang-option-detail">
-                Native Devanagari script (e.g. नमस्ते दोस्तों)
               </div>
             </div>
           </button>

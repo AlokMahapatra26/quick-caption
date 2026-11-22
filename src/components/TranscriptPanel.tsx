@@ -73,10 +73,25 @@ interface TranscriptPanelProps {
   onWordChange: (wordId: string, text: string) => void;
 }
 
-const LANGUAGE_OPTIONS = [
-  { id: 'english' as const, label: 'English', icon: LanguageIcon },
-  { id: 'hinglish' as const, label: 'Hinglish', icon: GlobeIcon },
-  { id: 'hindi' as const, label: 'Hindi', icon: ScriptIcon },
+const SCRIPT_OPTIONS = [
+  {
+    id: 'hinglish' as const,
+    label: 'Latin (Hinglish)',
+    title: 'Spoken Hindi in Latin / English alphabet (e.g. namaste doston)',
+    icon: GlobeIcon,
+  },
+  {
+    id: 'hindi' as const,
+    label: 'Devanagari (Hindi)',
+    title: 'Spoken Hindi in native Devanagari script (e.g. नमस्ते दोस्तों)',
+    icon: ScriptIcon,
+  },
+  {
+    id: 'english' as const,
+    label: 'English',
+    title: 'Standard English captions',
+    icon: LanguageIcon,
+  },
 ];
 
 export function TranscriptPanel({
@@ -92,22 +107,26 @@ export function TranscriptPanel({
 }: TranscriptPanelProps) {
   return (
     <div className="tab-pane active">
-      {/* Speech Language Switcher: English | Hinglish | Hindi */}
-      <div className="lang-segmented" role="group" aria-label="Caption Language">
-        {LANGUAGE_OPTIONS.map((opt) => {
-          const Icon = opt.icon;
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              className={`lang-seg-btn${captionLanguage === opt.id ? ' active' : ''}`}
-              onClick={() => onChangeLanguage(opt.id)}
-            >
-              <Icon size={13} />
-              <span>{opt.label}</span>
-            </button>
-          );
-        })}
+      {/* Caption Script & Language Switcher */}
+      <div className="transcript-script-header">
+        <span className="script-header-title">Caption Script</span>
+        <div className="lang-segmented" role="radiogroup" aria-label="Caption Script">
+          {SCRIPT_OPTIONS.map((opt) => {
+            const Icon = opt.icon;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                className={`lang-seg-btn${captionLanguage === opt.id ? ' active' : ''}`}
+                onClick={() => onChangeLanguage(opt.id)}
+                title={opt.title}
+              >
+                <Icon size={13} />
+                <span>{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="transcript-header-actions">
