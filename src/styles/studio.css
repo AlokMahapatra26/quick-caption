@@ -95,6 +95,41 @@ body {
   color: #09090b;
 }
 
+/* TOPBAR LANGUAGE TOGGLE */
+.topbar-lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  border-radius: 9999px;
+  padding: 2px 3px;
+}
+
+.topbar-lang-chip {
+  border: none;
+  background: transparent;
+  color: #71717a;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.topbar-lang-chip:hover {
+  color: #09090b;
+}
+
+.topbar-lang-chip.active {
+  background: #09090b;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
 .brand-eyebrow {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -312,7 +347,94 @@ body {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-dim);
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+/* DROPZONE LANGUAGE SELECTOR */
+.dropzone-lang-card {
+  width: 100%;
+  max-width: 320px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: var(--rounded-md);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.05);
+  text-align: left;
+}
+
+.dropzone-lang-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.dropzone-lang-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #71717a;
+}
+
+.dropzone-lang-badge {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #09090b;
+  background: #f4f4f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #e4e4e7;
+}
+
+.dropzone-lang-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.dropzone-lang-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #e4e4e7;
+  background: #fafafa;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.dropzone-lang-btn:hover {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+}
+
+.dropzone-lang-btn.active {
+  background: #09090b;
+  border-color: #09090b;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.lang-btn-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: inherit;
+}
+
+.lang-btn-sub {
+  font-size: 10px;
+  color: #71717a;
+  white-space: nowrap;
+}
+
+.dropzone-lang-btn.active .lang-btn-sub {
+  color: #a1a1aa;
 }
 
 .dropzone-actions {
@@ -1698,7 +1820,7 @@ input:checked + .toggle-slider:before {
 /* TRANSCRIPT TAB */
 .lang-segmented {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 4px;
   padding: 3px;
   background: #f4f4f5;

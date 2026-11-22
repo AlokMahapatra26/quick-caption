@@ -74,9 +74,8 @@ interface TranscriptPanelProps {
 }
 
 const LANGUAGE_OPTIONS: { id: CaptionLanguage; label: string }[] = [
-  { id: 'hinglish', label: 'Hinglish' },
-  { id: 'english', label: 'English' },
-  { id: 'hindi', label: 'Hindi' },
+  { id: 'english', label: '⚡ English (39MB)' },
+  { id: 'hinglish', label: '🌐 Non-English (75MB)' },
 ];
 
 export function TranscriptPanel({

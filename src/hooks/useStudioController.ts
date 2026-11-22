@@ -46,6 +46,20 @@ export interface ExportModalState {
   error: string | null;
 }
 
+function getInitialLanguage(): CaptionLanguage {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('autocaption_caption_lang');
+    if (saved === 'english' || saved === 'hinglish') {
+      return saved as CaptionLanguage;
+    }
+    const isLikelyIndian =
+      typeof navigator !== 'undefined' &&
+      /^(hi|en-IN)/i.test(navigator.language || '');
+    return isLikelyIndian ? 'hinglish' : 'english';
+  }
+  return 'english';
+}
+
 export function useStudioController() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -90,10 +104,10 @@ export function useStudioController() {
   const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
   const [activeWordId, setActiveWordId] = useState<string | null>(null);
   const [captionLanguage, setCaptionLanguage] =
-    useState<CaptionLanguage>('hinglish');
+    useState<CaptionLanguage>(getInitialLanguage);
   const [multilingualModelSize, setMultilingualModelSize] =
     useState<MultilingualModelSize>('base');
-  const captionLanguageRef = useRef<CaptionLanguage>('hinglish');
+  const captionLanguageRef = useRef<CaptionLanguage>(getInitialLanguage());
   const multilingualModelSizeRef = useRef<MultilingualModelSize>('base');
 
   const [silenceEnabled, setSilenceEnabled] = useState(false);
@@ -475,8 +489,11 @@ export function useStudioController() {
     (nextLang: CaptionLanguage) => {
       captionLanguageRef.current = nextLang;
       setCaptionLanguage(nextLang);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('autocaption_caption_lang', nextLang);
+      }
 
-      // Instantly switch script (Devanagari <-> Hinglish) if we already have Hindi transcription
+      // Instantly switch script if we already have native words with Devanagari
       const nativeWords = nativeWordsRef.current;
       if (
         nativeWords &&
@@ -487,7 +504,7 @@ export function useStudioController() {
           applyWords(
             nativeWords.map((w) => ({ ...w, word: toNaturalHinglish(w.word) }))
           );
-        } else if (nextLang === 'hindi') {
+        } else {
           applyWords(nativeWords.map((w) => ({ ...w })));
         }
       }

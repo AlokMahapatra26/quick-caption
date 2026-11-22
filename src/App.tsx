@@ -53,6 +53,8 @@ export function App() {
 
       <Topbar
         hasVideo={studio.hasVideo}
+        captionLanguage={studio.captionLanguage}
+        onChangeLanguage={studio.handleChangeCaptionLanguage}
         onTriggerUpload={openFilePicker}
         onOpenSettings={() => setSettingsOpen(true)}
         onExport={() => void studio.triggerExport()}
@@ -70,6 +72,8 @@ export function App() {
           currentTime={studio.currentTime}
           duration={studio.duration}
           loader={studio.loader}
+          captionLanguage={studio.captionLanguage}
+          onSelectLanguage={studio.handleChangeCaptionLanguage}
           onBrowseClick={openFilePicker}
           onFileDrop={(file) => studio.loadVideoFile(file)}
           onLoadDemo={() => void studio.handleLoadDemoVideo()}

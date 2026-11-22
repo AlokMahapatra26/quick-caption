@@ -111,9 +111,9 @@ export function SettingsModal({
             </div>
             <div className="settings-row">
               <div className="settings-row-info">
-                <strong>Hinglish / Hindi Model</strong>
+                <strong>Non-English Model Size</strong>
                 <p className="settings-row-desc">
-                  Cached in browser storage after first download (English uses 39MB tiny.en)
+                  Used when Non-English is selected (English always uses 39MB tiny.en)
                 </p>
               </div>
               <select

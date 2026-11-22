@@ -211,11 +211,9 @@ workerSelf.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
     workerSelf.postMessage({
       type: 'STATUS',
       message:
-        language === 'hinglish'
-          ? 'Transcribing Hinglish speech locally...'
-          : language === 'hindi'
-            ? 'Transcribing Hindi speech locally...'
-            : 'Transcribing English speech locally...',
+        language === 'english'
+          ? 'Transcribing English speech locally (39MB)...'
+          : 'Transcribing speech locally (auto-detecting language, 75MB)...',
     });
 
     const options: TranscribeOptions = {
@@ -225,7 +223,6 @@ workerSelf.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
     };
 
     if (isMultilingual) {
-      options.language = 'hindi';
       options.task = 'transcribe';
     }
 
