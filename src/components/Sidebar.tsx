@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStudio } from '../context/StudioContext';
 import {
+  DownloadIcon,
   MotionIcon,
   StyleIcon,
   TemplatesIcon,
@@ -52,16 +53,13 @@ export function Sidebar() {
         </button>
         <button
           type="button"
-          className={`tab-btn${activeTab === 'transcript' ? ' active' : ''}`}
+          className={`tab-btn mobile-only-tab${activeTab === 'transcript' ? ' active' : ''}`}
           onClick={() => setActiveTab('transcript')}
         >
           <span className="tab-icon" aria-hidden="true">
             <TranscriptIcon />
           </span>
-          <span className="tab-label">Transcript</span>
-          {studio.wordCount > 0 && (
-            <span className="tab-badge">{studio.wordCount}</span>
-          )}
+          <span className="tab-label">Captions</span>
         </button>
       </div>
 
@@ -114,6 +112,18 @@ export function Sidebar() {
           onWordChange={studio.updateWordText}
         />
       )}
+
+      <div className="sidebar-footer">
+        <button
+          type="button"
+          className="btn btn-primary btn-full sidebar-export-btn"
+          disabled={!studio.hasVideo}
+          onClick={() => void studio.triggerExport()}
+        >
+          <DownloadIcon />
+          <span>Export MP4</span>
+        </button>
+      </div>
     </aside>
   );
 }

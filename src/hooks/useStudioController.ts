@@ -126,6 +126,7 @@ export function useStudioController() {
   const [translateToEnglish, setTranslateToEnglish] = useState(false);
   const [videoFilename, setVideoFilename] = useState('video.mp4');
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const [waveformPeaks, setWaveformPeaks] = useState<number[]>([]);
   const [projects, setProjects] = useState<ProjectRecord[]>(() =>
     loadProjects()
   );
@@ -481,6 +482,10 @@ export function useStudioController() {
     [runSpeechRecognition]
   );
 
+  const openLanguagePrompt = useCallback(() => {
+    setLanguagePromptOpen(true);
+  }, []);
+
   const closeLanguagePrompt = useCallback(() => {
     setLanguagePromptOpen(false);
   }, []);
@@ -524,8 +529,37 @@ export function useStudioController() {
       const url = URL.createObjectURL(file);
       videoUrlRef.current = url;
       setVideoPreviewUrl(url);
+      setWaveformPeaks([]);
       video.src = url;
       video.load();
+
+      // Compute normalized RMS audio waveform peaks in background for the timeline
+      void extract16kHzMonoAudio(file)
+        .then(({ audioData }) => {
+          const barCount = 160;
+          const step = Math.max(1, Math.floor(audioData.length / barCount));
+          const rawRms: number[] = [];
+          let globalMax = 0.001;
+          for (let i = 0; i < barCount; i++) {
+            let sumSq = 0;
+            let count = 0;
+            const start = i * step;
+            const end = Math.min(audioData.length, start + step);
+            for (let j = start; j < end; j += 4) {
+              const v = audioData[j];
+              sumSq += v * v;
+              count++;
+            }
+            const rms = count > 0 ? Math.sqrt(sumSq / count) : 0;
+            if (rms > globalMax) globalMax = rms;
+            rawRms.push(rms);
+          }
+          const peaks = rawRms.map((r) => Math.min(1, Math.pow(r / globalMax, 0.75)));
+          setWaveformPeaks(peaks);
+        })
+        .catch(() => {
+          // Non-fatal if audio track is silent or unsupported
+        });
     },
     []
   );
@@ -957,6 +991,7 @@ export function useStudioController() {
     translateToEnglish,
     videoFilename,
     videoPreviewUrl,
+    waveformPeaks,
     multilingualModelSize,
     handleChangeCaptionLanguage,
     handleChangeMultilingualModelSize,
@@ -967,6 +1002,7 @@ export function useStudioController() {
     groqApiKey,
     handleUpdateGroqApiKey,
     languagePromptOpen,
+    openLanguagePrompt,
     confirmLanguageAndTranscribe,
     closeLanguagePrompt,
     // Silence Remover

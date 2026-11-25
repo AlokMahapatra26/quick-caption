@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { CaptionsWorkspace } from './components/CaptionsWorkspace';
 import { ExportModal } from './components/ExportModal';
 import { LanguagePromptModal } from './components/LanguagePromptModal';
 import { ProjectsPage } from './components/ProjectsPage';
 import { SettingsPage } from './components/SettingsPage';
 import { Sidebar } from './components/Sidebar';
+import { TimelinePanel } from './components/TimelinePanel';
 import { Topbar, type AppView } from './components/Topbar';
 import { VideoStage } from './components/VideoStage';
 import { StudioProvider } from './context/StudioContext';
@@ -124,6 +126,11 @@ export function App() {
         <div
           className={`workspace${currentView === 'studio' ? '' : ' hidden'}`}
         >
+          <div className="studio-left-col">
+            <CaptionsWorkspace />
+            <TimelinePanel />
+          </div>
+
           <VideoStage
             videoRef={studio.videoRef}
             canvasRef={studio.canvasRef}
