@@ -27,8 +27,22 @@ export type PresetKey =
 export type AnimationType = 'bounce' | 'glow' | 'none';
 export type TextTransform = 'uppercase' | 'none' | 'capitalize';
 
-export type CaptionLanguage = 'english' | 'hinglish' | 'hindi';
+export type CaptionLanguage =
+  | 'english'
+  | 'hinglish'
+  | 'hindi'
+  | 'punjabi'
+  | 'urdu'
+  | 'gujarati'
+  | (string & {});
+export type CaptionDensity = 'full' | 'important';
 export type MultilingualModelSize = 'base' | 'small';
+
+export interface CaptionTranscribeConfig {
+  language: CaptionLanguage;
+  density: CaptionDensity;
+  translateToEnglish: boolean;
+}
 
 export type TransitionScope = 'all' | 'emphasized';
 export type TransitionPhase = 'in' | 'hold' | 'out';

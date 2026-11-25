@@ -11,15 +11,30 @@ import {
   urduToDevanagari,
 } from '../core/hinglish';
 import {
+  extractImportantCaptions,
+  getLanguageOption,
+} from '../core/languages';
+import {
   PersonSegmenter,
   type SegmenterStatus,
 } from '../core/personSegmenter';
 import { DEMO_SAMPLE_WORDS, PRESETS } from '../core/presets';
+import {
+  captureVideoThumbnail,
+  getProjectVideoBlob,
+  loadProjects,
+  removeProjectRecord,
+  saveProjectVideoBlob,
+  upsertProjectRecord,
+  type ProjectRecord,
+} from '../core/projectStore';
 import { SilenceDetector } from '../core/silenceDetector';
 import { SubtitleEngine } from '../core/subtitleEngine';
 import { createDefaultTransitionConfig } from '../core/transitions';
 import type {
+  CaptionDensity,
   CaptionLanguage,
+  CaptionTranscribeConfig,
   ExportResult,
   HoldTransitionId,
   InOutTransitionId,
@@ -52,7 +67,7 @@ export interface ExportModalState {
 function getInitialLanguage(): CaptionLanguage {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('autocaption_caption_lang') as CaptionLanguage;
-    if (saved === 'hinglish' || saved === 'hindi' || saved === 'english') {
+    if (saved) {
       return saved;
     }
   }
@@ -71,6 +86,8 @@ export function useStudioController() {
   const workerRef = useRef<Worker | null>(null);
 
   const currentFileRef = useRef<File | null>(null);
+  const activeProjectIdRef = useRef<string | null>(null);
+  const pendingRestoredWordsRef = useRef<RawWord[] | null>(null);
   const nativeWordsRef = useRef<RawWord[] | null>(null);
   const videoUrlRef = useRef<string | null>(null);
   const exportUrlRef = useRef<string | null>(null);
@@ -105,6 +122,13 @@ export function useStudioController() {
   const [activeWordId, setActiveWordId] = useState<string | null>(null);
   const [captionLanguage, setCaptionLanguage] =
     useState<CaptionLanguage>(getInitialLanguage);
+  const [captionDensity, setCaptionDensity] = useState<CaptionDensity>('full');
+  const [translateToEnglish, setTranslateToEnglish] = useState(false);
+  const [videoFilename, setVideoFilename] = useState('video.mp4');
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const [projects, setProjects] = useState<ProjectRecord[]>(() =>
+    loadProjects()
+  );
   const [multilingualModelSize, setMultilingualModelSize] =
     useState<MultilingualModelSize>('base');
   const [groqApiKey, setGroqApiKey] = useState<string>(() => {
@@ -114,6 +138,8 @@ export function useStudioController() {
     return '';
   });
   const captionLanguageRef = useRef<CaptionLanguage>(getInitialLanguage());
+  const captionDensityRef = useRef<CaptionDensity>('full');
+  const translateToEnglishRef = useRef<boolean>(false);
   const multilingualModelSizeRef = useRef<MultilingualModelSize>('base');
 
   const handleUpdateGroqApiKey = useCallback((key: string) => {
@@ -164,14 +190,50 @@ export function useStudioController() {
     }
   }, []);
 
+  const persistActiveProject = useCallback(
+    (wordsOverride?: RawWord[]) => {
+      const file = currentFileRef.current;
+      const video = videoRef.current;
+      if (!file || !activeProjectIdRef.current) return;
+
+      const wordsToSave = wordsOverride ?? engineRef.current.rawWords;
+      const existing = loadProjects().find(
+        (p) => p.id === activeProjectIdRef.current
+      );
+      const now = Date.now();
+      const thumbnail =
+        existing?.thumbnailDataUrl ||
+        (video ? captureVideoThumbnail(video) : undefined);
+
+      const nextRecord: ProjectRecord = {
+        id: activeProjectIdRef.current,
+        name: file.name,
+        fileSize: file.size,
+        duration: video?.duration || existing?.duration || 0,
+        createdAt: existing?.createdAt ?? now,
+        updatedAt: now,
+        language: captionLanguageRef.current,
+        preset: engineRef.current.styleConfig.presetName,
+        wordCount: wordsToSave.length,
+        thumbnailDataUrl: thumbnail,
+        rawWords: wordsToSave,
+        styleConfig: { ...engineRef.current.styleConfig },
+      };
+
+      setProjects(upsertProjectRecord(nextRecord));
+    },
+    []
+  );
+
   const applyWords = useCallback(
     (words: RawWord[]) => {
       const nextSegments = engineRef.current.processWords(words);
       setSegments([...nextSegments]);
       setWordCount(engineRef.current.rawWords.length);
       recalculateSilences();
+      persistActiveProject(words);
     },
-    [recalculateSilences]
+    [persistActiveProject, recalculateSilences]
   );
 
   const loadSampleCaptions = useCallback(() => {
@@ -258,7 +320,11 @@ export function useStudioController() {
         } else if (data.type === 'TRANSCRIBE_SUCCESS') {
           setLoader((prev) => ({ ...prev, visible: false, progress: 100 }));
           nativeWordsRef.current = data.nativeWords ?? null;
-          applyWords(data.words);
+          const finalWords =
+            captionDensityRef.current === 'important'
+              ? extractImportantCaptions(data.words)
+              : data.words;
+          applyWords(finalWords);
         }
       };
       workerRef.current = worker;
@@ -276,14 +342,25 @@ export function useStudioController() {
   }, [applyWords]);
 
   const runSpeechRecognition = useCallback(
-    async (overrideLanguage?: CaptionLanguage) => {
+    async (overrideConfig?: CaptionLanguage | CaptionTranscribeConfig) => {
       const file = currentFileRef.current;
       if (!file) {
         loadSampleCaptions();
         return;
       }
 
-      const activeLang = overrideLanguage ?? captionLanguageRef.current;
+      const activeLang =
+        typeof overrideConfig === 'string'
+          ? overrideConfig
+          : (overrideConfig?.language ?? captionLanguageRef.current);
+      const activeDensity =
+        typeof overrideConfig === 'object' && overrideConfig
+          ? overrideConfig.density
+          : captionDensityRef.current;
+      const shouldTranslate =
+        typeof overrideConfig === 'object' && overrideConfig
+          ? overrideConfig.translateToEnglish
+          : translateToEnglishRef.current;
 
       setLoader({
         visible: true,
@@ -291,13 +368,15 @@ export function useStudioController() {
         progress: 10,
       });
 
+      const useGroqCloud = activeLang !== 'english' || shouldTranslate;
+
       try {
         const audioResult = await extract16kHzMonoAudio(file, (pct, msg) => {
           setLoader({ visible: true, text: msg, progress: pct });
         });
 
-        // 1. Hinglish via Groq Whisper Large v3
-        if (activeLang === 'hinglish') {
+        // 1. Non-English or Translation via Groq Whisper Large v3
+        if (useGroqCloud) {
           const key =
             groqApiKey ||
             (typeof window !== 'undefined'
@@ -309,21 +388,30 @@ export function useStudioController() {
             return;
           }
 
+          const langLabel = getLanguageOption(activeLang).label;
           setLoader({
             visible: true,
-            text: 'Transcribing Hinglish with Groq Whisper Large v3...',
+            text: shouldTranslate
+              ? `Translating ${langLabel} to English with Groq Whisper Large v3...`
+              : `Transcribing ${langLabel} with Groq Whisper Large v3...`,
             progress: 50,
           });
 
-          const words = await transcribeWithGroq(audioResult.audioData, {
+          const rawWords = await transcribeWithGroq(audioResult.audioData, {
             apiKey: key,
-            language: 'hinglish',
+            language: activeLang,
+            translateToEnglish: shouldTranslate,
             onStatus: (msg) =>
               setLoader((prev) => ({ ...prev, text: msg, progress: 75 })),
           });
 
+          const finalWords =
+            activeDensity === 'important'
+              ? extractImportantCaptions(rawWords)
+              : rawWords;
+
           setLoader({ visible: false, text: '', progress: 100 });
-          applyWords(words);
+          applyWords(finalWords);
           return;
         }
 
@@ -351,11 +439,11 @@ export function useStudioController() {
       } catch (err: unknown) {
         console.warn('Speech recognition notice:', err);
         setLoader({ visible: false, text: '', progress: 0 });
-        if (activeLang === 'hinglish') {
+        if (useGroqCloud) {
           const msg =
             err instanceof Error
               ? err.message
-              : 'Failed to transcribe Hinglish with Groq.';
+              : 'Failed to transcribe with Groq.';
           alert(msg);
         } else {
           loadSampleCaptions();
@@ -366,14 +454,29 @@ export function useStudioController() {
   );
 
   const confirmLanguageAndTranscribe = useCallback(
-    (lang: CaptionLanguage) => {
-      captionLanguageRef.current = lang;
-      setCaptionLanguage(lang);
+    (config: CaptionLanguage | CaptionTranscribeConfig) => {
+      const normalized: CaptionTranscribeConfig =
+        typeof config === 'string'
+          ? {
+              language: config,
+              density: captionDensityRef.current,
+              translateToEnglish: translateToEnglishRef.current,
+            }
+          : config;
+
+      captionLanguageRef.current = normalized.language;
+      captionDensityRef.current = normalized.density;
+      translateToEnglishRef.current = normalized.translateToEnglish;
+
+      setCaptionLanguage(normalized.language);
+      setCaptionDensity(normalized.density);
+      setTranslateToEnglish(normalized.translateToEnglish);
+
       if (typeof window !== 'undefined') {
-        localStorage.setItem('autocaption_caption_lang', lang);
+        localStorage.setItem('autocaption_caption_lang', normalized.language);
       }
       setLanguagePromptOpen(false);
-      void runSpeechRecognition(lang);
+      void runSpeechRecognition(normalized);
     },
     [runSpeechRecognition]
   );
@@ -383,12 +486,36 @@ export function useStudioController() {
   }, []);
 
   const loadVideoFile = useCallback(
-    (file: File, options: { autoTranscribe?: boolean } = {}) => {
+    (
+      file: File,
+      options: {
+        autoTranscribe?: boolean;
+        projectId?: string;
+        restoredWords?: RawWord[];
+        restoredStyle?: SubtitleStyleConfig;
+      } = {}
+    ) => {
       const video = videoRef.current;
       if (!video) return;
 
+      const projectId =
+        options.projectId ||
+        `proj-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      activeProjectIdRef.current = projectId;
       currentFileRef.current = file;
+      setVideoFilename(file.name);
       skipAutoTranscribeRef.current = options.autoTranscribe === false;
+      pendingRestoredWordsRef.current = options.restoredWords ?? null;
+
+      if (options.restoredStyle) {
+        engineRef.current.styleConfig = { ...options.restoredStyle };
+        setActivePreset(options.restoredStyle.presetName);
+        setStyleConfig({ ...options.restoredStyle });
+      }
+
+      if (!options.projectId) {
+        void saveProjectVideoBlob(projectId, file);
+      }
 
       // Revoke previous object URL to avoid memory leaks
       if (videoUrlRef.current) {
@@ -396,11 +523,41 @@ export function useStudioController() {
       }
       const url = URL.createObjectURL(file);
       videoUrlRef.current = url;
+      setVideoPreviewUrl(url);
       video.src = url;
       video.load();
     },
     []
   );
+
+  const openSavedProject = useCallback(
+    async (project: ProjectRecord): Promise<boolean> => {
+      const blob = await getProjectVideoBlob(project.id);
+      if (!blob) {
+        alert(
+          `The video file for "${project.name}" is no longer cached in browser storage. Please upload the video again.`
+        );
+        return false;
+      }
+      const restoredFile = new File([blob], project.name, {
+        type: blob.type || 'video/mp4',
+      });
+      captionLanguageRef.current = project.language;
+      setCaptionLanguage(project.language);
+      loadVideoFile(restoredFile, {
+        autoTranscribe: false,
+        projectId: project.id,
+        restoredWords: project.rawWords,
+        restoredStyle: project.styleConfig,
+      });
+      return true;
+    },
+    [loadVideoFile]
+  );
+
+  const deleteProject = useCallback((projectId: string) => {
+    setProjects(removeProjectRecord(projectId));
+  }, []);
 
   const handleLoadedMetadata = useCallback(() => {
     const video = videoRef.current;
@@ -421,13 +578,19 @@ export function useStudioController() {
 
     startRenderLoop();
 
-    if (skipAutoTranscribeRef.current) {
+    if (pendingRestoredWordsRef.current) {
+      const restored = pendingRestoredWordsRef.current;
+      pendingRestoredWordsRef.current = null;
+      skipAutoTranscribeRef.current = false;
+      applyWords(restored);
+    } else if (skipAutoTranscribeRef.current) {
       skipAutoTranscribeRef.current = false;
       loadSampleCaptions();
     } else {
+      persistActiveProject();
       setLanguagePromptOpen(true);
     }
-  }, [loadSampleCaptions, startRenderLoop]);
+  }, [applyWords, loadSampleCaptions, persistActiveProject, startRenderLoop]);
 
   const handleLoadDemoVideo = useCallback(async () => {
     if (isGeneratingDemo) return;
@@ -790,6 +953,10 @@ export function useStudioController() {
     activeSegmentId,
     activeWordId,
     captionLanguage,
+    captionDensity,
+    translateToEnglish,
+    videoFilename,
+    videoPreviewUrl,
     multilingualModelSize,
     handleChangeCaptionLanguage,
     handleChangeMultilingualModelSize,
@@ -808,6 +975,10 @@ export function useStudioController() {
     jumpcutStats,
     handleToggleSilence,
     handleChangeSilenceThreshold,
+    // Projects
+    projects,
+    openSavedProject,
+    deleteProject,
     // Export
     exportModal,
     triggerExport,

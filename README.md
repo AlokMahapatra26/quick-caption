@@ -1,7 +1,7 @@
 # AutoCaption Studio 🎬
 
 > **100% Free, Unlimited, Client-Side Kinetic Video Captions & Editor**  
-> Run directly in modern web browsers, on native desktop (macOS, Windows, Linux via Tauri), and mobile (Android via Capacitor) with **$0 cloud compute costs**.
+> Run directly in modern web browsers with **$0 cloud compute costs**.
 
 ---
 
@@ -38,18 +38,6 @@ Open **[http://localhost:5173](http://localhost:5173)** in your browser.
 
 ---
 
-## 📱 Cross-Platform Support
-
-This single repository targets **Web**, **Desktop**, and **Mobile Android**:
-
-| Platform | Technology | How to Run / Build |
-| :--- | :--- | :--- |
-| **Web Browser** | React 19 + Vite 6 | `npm run dev` (dev) or `npm run build` (prod) |
-| **Desktop (Win/Mac/Linux)** | [Tauri v2](https://v2.tauri.app/) (Rust + OS Webview) | `npm run tauri dev` |
-| **Mobile Android** | [Capacitor](https://capacitorjs.com/) | `npm run android:sync` (build & sync to [android/](file:///home/alok/All%20projects/Personal%20Project/autocaption/android)) |
-
----
-
 ## 🛠️ Available Scripts
 
 | Command | Action |
@@ -58,9 +46,6 @@ This single repository targets **Web**, **Desktop**, and **Mobile Android**:
 | `npm run build` | Runs TypeScript checks (`tsc -b`) and produces production bundle in `dist/` |
 | `npm run preview` | Locally serves the production `dist/` bundle |
 | `npm run typecheck` | Validates TypeScript types across the entire project without emitting files |
-| `npm run tauri dev` | Launches the native desktop window via Tauri v2 |
-| `npm run android:sync` | Builds the frontend and syncs all assets into the native Android project |
-| `npm run android:open` | Opens the `android/` directory in Android Studio |
 
 ---
 
@@ -68,10 +53,8 @@ This single repository targets **Web**, **Desktop**, and **Mobile Android**:
 
 ```
 autocaption/
-├── android/                 # Native Android Studio project (Capacitor)
-├── src-tauri/               # Native desktop app configurations & Rust backend (Tauri v2)
 ├── src/
-│   ├── components/          # Modular UI components (Topbar, VideoStage, Sidebar, Panels)
+│   ├── components/          # Modular UI components (Topbar, ProjectsPage, VideoStage, Sidebar, Panels)
 │   ├── core/                # Pure TypeScript engines (zero-React 60fps canvas, Whisper worker, MediaPipe)
 │   │   ├── subtitleEngine.ts    # 60fps Canvas 2D subtitle compositor & 24 presets
 │   │   ├── transcriber.worker.ts# Local Whisper worker with WebGPU & thread capping

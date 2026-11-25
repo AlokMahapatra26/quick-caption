@@ -1,6 +1,7 @@
-import type { RawWord } from '../types/caption';
+import type { CaptionLanguage, RawWord } from '../types/caption';
 import { recordGroqTranscription } from './groqUsage';
-import { toNaturalHinglish } from './hinglish';
+import { toNaturalHinglish, urduToDevanagari } from './hinglish';
+import { getLanguageOption } from './languages';
 
 /**
  * Encodes Float32Array PCM samples into a standard 16kHz Mono 16-bit PCM WAV Blob.
@@ -57,7 +58,8 @@ function writeString(view: DataView, offset: number, str: string) {
 
 export interface GroqTranscribeOptions {
   apiKey: string;
-  language?: 'english' | 'hinglish';
+  language?: CaptionLanguage;
+  translateToEnglish?: boolean;
   prompt?: string;
   onStatus?: (message: string) => void;
 }
@@ -92,7 +94,13 @@ export async function transcribeWithGroq(
   audioData: Float32Array,
   options: GroqTranscribeOptions
 ): Promise<RawWord[]> {
-  const { apiKey, language = 'hinglish', prompt, onStatus } = options;
+  const {
+    apiKey,
+    language = 'hinglish',
+    translateToEnglish = false,
+    prompt,
+    onStatus,
+  } = options;
   const cleanKey = apiKey ? apiKey.trim() : '';
   if (!cleanKey) {
     throw new Error(
@@ -100,38 +108,55 @@ export async function transcribeWithGroq(
     );
   }
 
+  const shouldTranslate = translateToEnglish && language !== 'english';
+  const langMeta = getLanguageOption(language);
+
   onStatus?.('Preparing 16kHz audio for Groq...');
   const wavBlob = float32ToWavBlob(audioData, 16000);
 
   const formData = new FormData();
   formData.append('file', wavBlob, 'audio.wav');
-  // Use the full 1.55B foundation model for deep Hindi & Indian dialect comprehension
+  // Use the full 1.55B foundation model for deep multilingual & Indian dialect comprehension
   formData.append('model', 'whisper-large-v3');
   formData.append('response_format', 'verbose_json');
-  formData.append('timestamp_granularities[]', 'word');
 
-  if (language === 'hinglish') {
-    // Condition Whisper acoustic encoder on Hindi phonemes to prevent English phonetic hallucinations
-    formData.append('language', 'hi');
-    const defaultHinglishPrompt =
-      'Hinglish conversation in Roman / Latin script: namaste doston, talash, subscribe, video, like, share, follow, creators, kya, kaise, kyun.';
-    formData.append('prompt', prompt || defaultHinglishPrompt);
+  const endpoint = shouldTranslate
+    ? 'https://api.groq.com/openai/v1/audio/translations'
+    : 'https://api.groq.com/openai/v1/audio/transcriptions';
+
+  if (shouldTranslate) {
+    formData.append(
+      'prompt',
+      prompt || 'Translate spoken audio into clear, natural English captions.'
+    );
+    onStatus?.(`Translating ${langMeta.label} speech to English...`);
   } else {
-    formData.append('language', 'en');
-    formData.append('prompt', prompt || 'English speech with clear punctuation and grammar.');
+    formData.append('timestamp_granularities[]', 'word');
+    formData.append('language', langMeta.whisperCode);
+
+    if (language === 'hinglish') {
+      const defaultHinglishPrompt =
+        'Hinglish conversation in Roman / Latin script: namaste doston, talash, subscribe, video, like, share, follow, creators, kya, kaise, kyun.';
+      formData.append('prompt', prompt || defaultHinglishPrompt);
+    } else if (language === 'english') {
+      formData.append(
+        'prompt',
+        prompt || 'English speech with clear punctuation and grammar.'
+      );
+    } else if (prompt) {
+      formData.append('prompt', prompt);
+    }
+
+    onStatus?.(`Transcribing ${langMeta.label} with Groq Whisper Large v3...`);
   }
 
-  onStatus?.('Transcribing speech with Groq Whisper Large v3...');
-  const response = await fetch(
-    'https://api.groq.com/openai/v1/audio/transcriptions',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${cleanKey}`,
-      },
-      body: formData,
-    }
-  );
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${cleanKey}`,
+    },
+    body: formData,
+  });
 
   if (!response.ok) {
     let errorDetail = `Status ${response.status}`;
@@ -167,20 +192,36 @@ export async function transcribeWithGroq(
     resetRequests: resetHdr,
   });
 
-  onStatus?.('Formatting Hinglish captions...');
+  onStatus?.(
+    shouldTranslate
+      ? 'Formatting English captions...'
+      : `Formatting ${langMeta.label} captions...`
+  );
+
+  const formatToken = (raw: string): string => {
+    const trimmed = raw.trim();
+    if (!trimmed || shouldTranslate || language === 'english') {
+      return trimmed;
+    }
+    if (language === 'hinglish') {
+      return toNaturalHinglish(trimmed);
+    }
+    if (language === 'hindi') {
+      return urduToDevanagari(trimmed);
+    }
+    return trimmed;
+  };
+
   let words: RawWord[] = [];
 
   if (data.words && data.words.length > 0) {
     words = data.words
-      .map((w, index) => {
-        const cleanText = toNaturalHinglish(w.word.trim());
-        return {
-          id: `word-${index}`,
-          word: cleanText,
-          start: Math.max(0, w.start),
-          end: Math.max(w.start + 0.1, w.end),
-        };
-      })
+      .map((w, index) => ({
+        id: `word-${index}`,
+        word: formatToken(w.word),
+        start: Math.max(0, w.start),
+        end: Math.max(w.start + 0.1, w.end),
+      }))
       .filter((w) => w.word.length > 0);
   } else if (data.segments && data.segments.length > 0) {
     // If word timestamps weren't returned directly, interpolate across segment intervals
@@ -192,7 +233,8 @@ export async function transcribeWithGroq(
       const step = segDuration / tokenList.length;
 
       for (let i = 0; i < tokenList.length; i++) {
-        const cleanWord = toNaturalHinglish(tokenList[i]);
+        const cleanWord = formatToken(tokenList[i]);
+        if (!cleanWord) continue;
         const wStart = seg.start + i * step;
         const wEnd = wStart + step * 0.9;
         words.push({
